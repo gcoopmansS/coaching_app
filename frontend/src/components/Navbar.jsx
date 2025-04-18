@@ -2,16 +2,35 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
+  IconButton,
+  Menu,
+  MenuItem,
   Avatar,
   Box,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-export default function Navbar({ user }) {
+export default function Navbar() {
+  const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleMenuOpen = (e) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNavigate = (path) => {
+    handleMenuClose();
+    navigate(path);
+  };
 
   const handleLogout = () => {
+    handleMenuClose();
     localStorage.removeItem("user");
     navigate("/login");
   };
@@ -21,31 +40,39 @@ export default function Navbar({ user }) {
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <Typography
           variant="h6"
+          sx={{ cursor: "pointer" }}
           onClick={() =>
             navigate(user?.role === "coach" ? "/coach" : "/runner")
           }
-          sx={{ cursor: "pointer" }}
         >
           Coaching App
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {user && (
-            <>
-              <Typography variant="body1">{user.name}</Typography>
+        {user && (
+          <Box>
+            <IconButton onClick={handleMenuOpen}>
               <Avatar
                 src={`http://localhost:3000${user.profilePicture || ""}`}
               />
-              <Button color="inherit" onClick={() => navigate("/profile")}>
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              onClick={handleMenuClose}
+            >
+              <MenuItem onClick={() => handleNavigate("/profile")}>
                 Profile
-              </Button>
-
-              <Button color="inherit" onClick={handleLogout}>
-                Logout
-              </Button>
-            </>
-          )}
-        </Box>
+              </MenuItem>
+              {user.role === "runner" && (
+                <MenuItem onClick={() => handleNavigate("/explore")}>
+                  Explore Coaches
+                </MenuItem>
+              )}
+              <MenuItem onClick={handleLogout}>Log Out</MenuItem>
+            </Menu>
+          </Box>
+        )}
       </Toolbar>
     </AppBar>
   );
