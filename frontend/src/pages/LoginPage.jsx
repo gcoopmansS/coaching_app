@@ -22,7 +22,11 @@ export default function LoginPage() {
 
     if (res.ok) {
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
+      if (data.user.role === "runner") {
+        navigate("/runner");
+      } else {
+        navigate("/coach");
+      }
     } else {
       setError(data.message);
     }
