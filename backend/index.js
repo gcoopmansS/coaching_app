@@ -140,3 +140,13 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+app.get("/api/coaches", async (req, res) => {
+  try {
+    const coaches = await User.find({ role: "coach" });
+    res.json(coaches);
+  } catch (err) {
+    console.error("Failed to fetch coaches:", err);
+    res.status(500).json({ message: "Could not load coaches" });
+  }
+});
