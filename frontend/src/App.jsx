@@ -1,15 +1,13 @@
-import { Typography, Box } from "@mui/material";
+import { Routes, Route } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 
 function App() {
   return (
-    <Box sx={{ textAlign: "center", mt: 10 }}>
-      <Typography variant="h3" gutterBottom>
-        Coaching App
-      </Typography>
-      <Typography variant="body1">
-        Frontend is set up and ready to build!
-      </Typography>
-    </Box>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+    </Routes>
   );
 }
 
