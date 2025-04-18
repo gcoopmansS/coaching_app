@@ -4,6 +4,7 @@ import SignupPage from "./pages/SignupPage";
 import RunnerDashboard from "./pages/RunnerDashboard";
 import CoachDashboard from "./pages/CoachDashboard";
 import ProfilePage from "./pages/ProfilePage";
+import ExploreCoaches from "./pages/ExploreCoaches";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Route path="/runner" element={<RunnerDashboard />} />
       <Route path="/coach" element={<CoachDashboard />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/explore" element={<ExploreCoaches />} />
     </Routes>
   );
 }
