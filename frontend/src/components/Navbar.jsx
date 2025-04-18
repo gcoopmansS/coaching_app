@@ -36,6 +36,10 @@ export default function Navbar({ user }) {
               <Avatar
                 src={`http://localhost:3000${user.profilePicture || ""}`}
               />
+              <Button color="inherit" onClick={() => navigate("/profile")}>
+                Profile
+              </Button>
+
               <Button color="inherit" onClick={handleLogout}>
                 Logout
               </Button>
