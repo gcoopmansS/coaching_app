@@ -7,6 +7,7 @@ const fs = require("fs");
 require("dotenv").config();
 
 const User = require("./models/User");
+const Connection = require("./models/Connection");
 
 const app = express();
 app.use(cors());
@@ -106,6 +107,31 @@ app.post("/api/login", async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Login failed" });
+  }
+});
+
+app.post("/api/connections", async (req, res) => {
+  const { runnerId, coachId, goal, distance, pace } = req.body;
+
+  try {
+    const existing = await Connection.findOne({
+      runnerId,
+      coachId,
+      status: "pending",
+    });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "You already have a pending request to this coach." });
+    }
+
+    const request = new Connection({ runnerId, coachId, goal, distance, pace });
+    await request.save();
+
+    res.status(201).json({ message: "Request sent!", connection: request });
+  } catch (err) {
+    console.error("Request error:", err);
+    res.status(500).json({ message: "Failed to send request" });
   }
 });
 
