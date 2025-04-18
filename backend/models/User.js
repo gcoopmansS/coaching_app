@@ -1,22 +1,32 @@
 const mongoose = require("mongoose");
 
+const notificationSchema = new mongoose.Schema({
+  message: String,
+  type: {
+    type: String,
+    enum: ["info", "success", "warning", "error"],
+    default: "info",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  seen: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const userSchema = new mongoose.Schema({
   name: String,
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-  },
+  email: String,
   password: String,
-  role: {
-    type: String,
-    enum: ["runner", "coach"],
-    required: true,
-  },
+  role: String,
   profilePicture: String,
   city: String,
   dateOfBirth: Date,
   bio: String,
+  notifications: [notificationSchema], // ✅ this must exist
 });
 
 module.exports = mongoose.model("User", userSchema);
