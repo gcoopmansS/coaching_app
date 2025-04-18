@@ -43,11 +43,9 @@ export default function ProfilePage() {
 
     const data = await res.json();
     if (res.ok) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ ...data.user, id: data.user._id })
-      );
-      setUser({ ...data.user, id: data.user._id });
+      const updated = { ...data.user, id: data.user._id };
+      localStorage.setItem("user", JSON.stringify(updated));
+      setUser(updated);
       setSnackOpen(true);
     }
   };
@@ -66,19 +64,17 @@ export default function ProfilePage() {
     });
 
     const data = await res.json();
+
     if (res.ok) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ ...data.user, id: data.user._id })
-      );
-      setUser({ ...data.user, id: data.user._id });
-      setSnackOpen(true);
+      const updated = { ...data.user, id: data.user._id };
+      localStorage.setItem("user", JSON.stringify(updated));
+      setUser(updated);
     }
   };
 
   return (
     <>
-      <Navbar user={user} />
+      <Navbar />
       <Box sx={{ maxWidth: 500, mx: "auto", mt: 5 }}>
         <Typography variant="h5" gutterBottom>
           Edit Profile
@@ -112,12 +108,15 @@ export default function ProfilePage() {
           />
           <TextField
             fullWidth
+            type="date"
             label="Date of Birth"
             name="dateOfBirth"
-            value={formData.dateOfBirth}
+            value={formData.dateOfBirth?.slice(0, 10) || ""}
             onChange={handleChange}
             margin="normal"
+            InputLabelProps={{ shrink: true }}
           />
+
           <TextField
             fullWidth
             label="Bio"
