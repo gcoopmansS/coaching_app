@@ -128,6 +128,25 @@ app.post("/api/connections", async (req, res) => {
     const request = new Connection({ runnerId, coachId, goal, distance, pace });
     await request.save();
 
+    // After await request.save();
+
+    const coach = await User.findById(coachId);
+    const runner = await User.findById(runnerId); // ✅ fetch the runner too
+
+    if (coach && runner) {
+      const notification = {
+        message: `${runner.name} requested coaching`,
+        type: "info",
+        createdAt: new Date(),
+        seen: false,
+      };
+      coach.notifications.push(notification);
+      console.log("📬 Pushing notification to coach:", notification);
+
+      await coach.save();
+      console.log("✅ Coach after save:", coach);
+    }
+
     res.status(201).json({ message: "Request sent!", connection: request });
   } catch (err) {
     console.error("Request error:", err);
@@ -174,5 +193,74 @@ app.get("/api/coaches", async (req, res) => {
   } catch (err) {
     console.error("Failed to fetch coaches:", err);
     res.status(500).json({ message: "Could not load coaches" });
+  }
+});
+
+app.get("/api/users/:id/notifications", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    res.json(user.notifications || []);
+  } catch (err) {
+    console.error("Fetch user notifications error:", err);
+    res.status(500).json({ message: "Failed to load notifications" });
+  }
+});
+
+app.patch("/api/connections/:id/status", async (req, res) => {
+  const { status } = req.body;
+
+  try {
+    const connection = await Connection.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate("runnerId coachId");
+
+    if (!connection) {
+      return res.status(404).json({ message: "Connection not found." });
+    }
+
+    const runnerId = connection.runnerId?._id || connection.runnerId;
+    const coachName = connection.coachId?.name || "a coach";
+
+    const message =
+      status === "accepted"
+        ? `🎉 Coach ${coachName} accepted your coaching request!`
+        : `❌ Coach ${coachName} rejected your coaching request.`;
+
+    const notification = {
+      message,
+      type: status === "accepted" ? "success" : "error",
+      createdAt: new Date(),
+      seen: false,
+    };
+
+    const updateResult = await User.updateOne(
+      { _id: runnerId },
+      { $push: { notifications: notification } }
+    );
+
+    console.log("📡 Notification update result:", updateResult);
+
+    if (updateResult.modifiedCount === 0) {
+      console.warn("⚠️ Notification was not pushed. Runner ID may not match.");
+    }
+
+    res.json(connection);
+  } catch (err) {
+    console.error("🔥 Update request status error:", err);
+    res.status(500).json({ message: "Failed to update status" });
+  }
+});
+
+app.get("/api/connections/coach/:coachId", async (req, res) => {
+  try {
+    const requests = await Connection.find({
+      coachId: req.params.coachId,
+    }).populate("runnerId");
+    res.json(requests);
+  } catch (err) {
+    console.error("Error loading coach requests:", err);
+    res.status(500).json({ message: "Failed to load requests" });
   }
 });
