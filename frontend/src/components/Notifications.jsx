@@ -31,12 +31,12 @@ export default function Notifications({ user }) {
     setAnchorEl(event.currentTarget);
 
     // Mark notifications as seen
-    fetch(
-      `http://localhost:3000/api/users/${user.id}/notifications/mark-seen`,
-      {
-        method: "PATCH",
-      }
-    );
+    const userId = user?._id || user?.id;
+    if (!userId) return;
+
+    fetch(`http://localhost:3000/api/users/${userId}/notifications/mark-seen`, {
+      method: "PATCH",
+    });
 
     // Update local state
     setNotifications((prev) => prev.map((n) => ({ ...n, seen: true })));
