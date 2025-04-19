@@ -283,9 +283,16 @@ app.get("/api/connections/coach/:coachId", async (req, res) => {
 
 app.post("/api/workouts", async (req, res) => {
   try {
-    const workout = new Workout(req.body);
-    await workout.save();
-    res.status(201).json({ message: "Workout saved!", workout });
+    const newWorkout = new Workout({
+      coachId: req.body.coachId,
+      runnerId: req.body.runnerId,
+      title: req.body.title,
+      date: req.body.date,
+      distance: req.body.distance,
+    });
+
+    await newWorkout.save();
+    res.status(201).json(newWorkout);
   } catch (err) {
     console.error("Workout save error:", err);
     res.status(500).json({ message: "Failed to save workout" });
