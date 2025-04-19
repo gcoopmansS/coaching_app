@@ -1,145 +1,173 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Box,
+  Typography,
   TextField,
   Button,
-  Typography,
   Avatar,
+  Stack,
   Snackbar,
   Alert,
 } from "@mui/material";
 import Navbar from "../components/Navbar";
 
-export default function ProfilePage() {
-  const [user, setUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user"))
-  );
-  const [formData, setFormData] = useState({
-    city: user.city || "",
-    dateOfBirth: user.dateOfBirth || "",
-    bio: user.bio || "",
-  });
-  const [snackOpen, setSnackOpen] = useState(false);
-  const fileInputRef = useRef();
+export default function Profile() {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const [user, setUser] = useState(storedUser);
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const [form, setForm] = useState({
+    city: user?.city || "",
+    dateOfBirth: user?.dateOfBirth?.slice(0, 10) || "",
+    bio: user?.bio || "",
+  });
+
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handleInputChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleAvatarClick = () => fileInputRef.current?.click();
+  const handleImageSelect = (e) => {
+    if (e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const form = new FormData();
-    form.append("userId", user.id);
-    form.append("profilePicture", file);
-
-    const res = await fetch("http://localhost:3000/api/profile", {
-      method: "POST",
-      body: form,
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      const updated = { ...data.user, id: data.user._id };
-      localStorage.setItem("user", JSON.stringify(updated));
-      setUser(updated);
-      setSnackOpen(true);
+      // Optional: preview immediately
+      const previewUrl = URL.createObjectURL(e.target.files[0]);
+      setUser({ ...user, profilePicture: previewUrl });
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const form = new FormData();
-    form.append("userId", user.id);
-    form.append("city", formData.city);
-    form.append("dateOfBirth", formData.dateOfBirth);
-    form.append("bio", formData.bio);
+  const handleAvatarClick = () => {
+    document.getElementById("profilePicInput").click();
+  };
 
-    const res = await fetch("http://localhost:3000/api/profile", {
-      method: "POST",
-      body: form,
-    });
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("userId", user._id || user.id);
+    formData.append("city", form.city);
+    formData.append("dateOfBirth", form.dateOfBirth);
+    formData.append("bio", form.bio);
+    if (selectedFile) {
+      formData.append("profilePicture", selectedFile);
+    }
 
-    const data = await res.json();
+    try {
+      const res = await fetch("http://localhost:3000/api/profile", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (res.ok) {
-      const updated = { ...data.user, id: data.user._id };
-      localStorage.setItem("user", JSON.stringify(updated));
-      setUser(updated);
+      const data = await res.json();
+
+      if (res.ok) {
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setSnackbar({
+          open: true,
+          message: "✅ Profile updated successfully!",
+          severity: "success",
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: data.message || "Something went wrong.",
+          severity: "error",
+        });
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: "Server error",
+        severity: "error",
+      });
     }
   };
 
   return (
     <>
       <Navbar />
-      <Box sx={{ maxWidth: 500, mx: "auto", mt: 5 }}>
-        <Typography variant="h5" gutterBottom>
-          Edit Profile
+      <Box sx={{ p: 3, maxWidth: 500, mx: "auto" }}>
+        <Typography variant="h4" gutterBottom>
+          My Profile
         </Typography>
 
-        <Box sx={{ textAlign: "center", mb: 2 }}>
-          <Avatar
-            src={`http://localhost:3000${user.profilePicture || ""}`}
-            sx={{ width: 100, height: 100, mx: "auto", cursor: "pointer" }}
-            onClick={handleAvatarClick}
-          />
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-          />
-          <Typography variant="caption" color="text.secondary">
-            Click the avatar to change your picture
-          </Typography>
-        </Box>
+        <Stack spacing={2}>
+          <Box sx={{ textAlign: "center" }}>
+            <input
+              id="profilePicInput"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleImageSelect}
+            />
+            <Avatar
+              src={
+                user?.profilePicture?.startsWith("/uploads")
+                  ? `http://localhost:3000${user.profilePicture}`
+                  : user?.profilePicture
+              }
+              sx={{ width: 100, height: 100, mx: "auto", cursor: "pointer" }}
+              onClick={handleAvatarClick}
+            />
+            <Typography variant="body2" color="textSecondary">
+              Click image to change
+            </Typography>
+          </Box>
 
-        <form onSubmit={handleSubmit}>
           <TextField
-            fullWidth
             label="City"
             name="city"
-            value={formData.city}
-            onChange={handleChange}
-            margin="normal"
-          />
-          <TextField
+            value={form.city}
+            onChange={handleInputChange}
             fullWidth
-            type="date"
+          />
+
+          <TextField
             label="Date of Birth"
             name="dateOfBirth"
-            value={formData.dateOfBirth?.slice(0, 10) || ""}
-            onChange={handleChange}
-            margin="normal"
+            type="date"
+            value={form.dateOfBirth}
+            onChange={handleInputChange}
+            fullWidth
             InputLabelProps={{ shrink: true }}
           />
 
           <TextField
-            fullWidth
             label="Bio"
             name="bio"
+            value={form.bio}
+            onChange={handleInputChange}
             multiline
             rows={3}
-            value={formData.bio}
-            onChange={handleChange}
-            margin="normal"
+            fullWidth
           />
-          <Button type="submit" variant="contained" sx={{ mt: 2 }}>
-            Save Profile
+
+          <Button variant="contained" onClick={handleSave}>
+            💾 Save Profile
           </Button>
-        </form>
+        </Stack>
       </Box>
 
       <Snackbar
-        open={snackOpen}
+        open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackOpen(false)}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          Profile updated!
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </>
