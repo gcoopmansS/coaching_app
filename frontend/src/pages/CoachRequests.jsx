@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Paper, Button, Stack } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Paper,
+  Button,
+  Stack,
+} from "@mui/material";
 import Navbar from "../components/Navbar";
 
 export default function CoachRequests() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [requests, setRequests] = useState([]);
+  const [tab, setTab] = useState(0);
 
   useEffect(() => {
     fetch(`http://localhost:3000/api/connections/coach/${user.id}`)
       .then((res) => res.json())
-      .then((data) => setRequests(data.filter((r) => r.status === "pending")))
+      .then(setRequests)
       .catch((err) => console.error("Failed to load requests:", err));
   }, [user.id]);
 
@@ -24,10 +33,17 @@ export default function CoachRequests() {
     );
 
     if (res.ok) {
+      const updated = await res.json();
       setRequests((prev) =>
-        prev.map((r) => (r._id === id ? { ...r, status } : r))
+        prev.map((r) => (r._id === updated._id ? updated : r))
       );
     }
+  };
+
+  const filtered = {
+    pending: requests.filter((r) => r.status === "pending"),
+    accepted: requests.filter((r) => r.status === "accepted"),
+    rejected: requests.filter((r) => r.status === "rejected"),
   };
 
   return (
@@ -35,44 +51,61 @@ export default function CoachRequests() {
       <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          Incoming Requests
+          Coaching Requests
         </Typography>
 
-        {requests.length === 0 && <Typography>No pending requests.</Typography>}
+        <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ mb: 3 }}>
+          <Tab label={`Pending (${filtered.pending.length})`} />
+          <Tab label={`Accepted (${filtered.accepted.length})`} />
+          <Tab label={`Rejected (${filtered.rejected.length})`} />
+        </Tabs>
 
-        {requests.map((r) => (
-          <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
-            <Typography>
-              <strong>From:</strong> {r.runnerId.name}
-            </Typography>
-            <Typography>
-              <strong>Goal:</strong> {r.goal}
-            </Typography>
-            <Typography>
-              <strong>Distance:</strong> {r.distance}
-            </Typography>
-            <Typography>
-              <strong>Pace:</strong> {r.pace}
-            </Typography>
+        {tab === 0 &&
+          filtered.pending.map((r) => (
+            <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6">{r.runnerId.name}</Typography>
+              <Typography>🎯 Goal: {r.goal}</Typography>
+              <Typography>🏃 Distance: {r.distance} km</Typography>
+              <Typography>⏱️ Pace: {r.pace}</Typography>
 
-            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => respondToRequest(r._id, "accepted")}
-              >
-                Accept
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => respondToRequest(r._id, "rejected")}
-              >
-                Reject
-              </Button>
-            </Stack>
-          </Paper>
-        ))}
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                <GradientButton
+                  variant="contained"
+                  color="success"
+                  onClick={() => respondToRequest(r._id, "accepted")}
+                >
+                  Accept
+                </GradientButton>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => respondToRequest(r._id, "rejected")}
+                >
+                  Reject
+                </Button>
+              </Stack>
+            </Paper>
+          ))}
+
+        {tab === 1 &&
+          filtered.accepted.map((r) => (
+            <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6">{r.runnerId.name}</Typography>
+              <Typography>🎯 Goal: {r.goal}</Typography>
+              <Typography>Distance: {r.distance} km</Typography>
+              <Typography>Pace: {r.pace}</Typography>
+              <Typography color="success.main">✅ Active Coaching</Typography>
+            </Paper>
+          ))}
+
+        {tab === 2 &&
+          filtered.rejected.map((r) => (
+            <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
+              <Typography variant="h6">{r.runnerId.name}</Typography>
+              <Typography>Goal: {r.goal}</Typography>
+              <Typography color="error.main">❌ Rejected</Typography>
+            </Paper>
+          ))}
       </Box>
     </>
   );

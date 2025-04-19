@@ -2,7 +2,8 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Box, Typography, Button, Paper, Stack } from "@mui/material";
 import Navbar from "../components/Navbar";
-import ScheduleWorkoutModal from "../components/ScheduleWorkoutModal";
+import WorkoutModal from "../components/WorkoutModal";
+import GradientButton from "../components/GradientButton";
 
 export default function RunnerOverviewPage() {
   const { id } = useParams();
@@ -48,9 +49,12 @@ export default function RunnerOverviewPage() {
           sx={{ mb: 2 }}
         >
           <Typography variant="h6">Planned Workouts</Typography>
-          <Button variant="contained" onClick={() => setShowModal(true)}>
+          <GradientButton
+            variant="contained"
+            onClick={() => setShowModal(true)}
+          >
             + Schedule Workout
-          </Button>
+          </GradientButton>
         </Stack>
 
         {/* Placeholder workout list */}
@@ -73,7 +77,7 @@ export default function RunnerOverviewPage() {
           <Typography>📊 Weekly stats coming soon...</Typography>
         </Paper>
 
-        <ScheduleWorkoutModal
+        <WorkoutModal
           open={showModal}
           onClose={(refresh) => {
             setShowModal(false);

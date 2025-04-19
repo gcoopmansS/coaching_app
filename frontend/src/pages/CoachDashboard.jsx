@@ -45,7 +45,7 @@ export default function CoachDashboard() {
                     display: "flex",
                     flexDirection: "column",
                   }}
-                  onClick={() => navigate(`/coach/athlete/${r.runnerId._id}`)}
+                  onClick={() => navigate(`/coach/runner/${r.runnerId._id}`)}
                 >
                   <CardMedia
                     component="img"

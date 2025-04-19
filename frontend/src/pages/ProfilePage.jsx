@@ -10,6 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import Navbar from "../components/Navbar";
+import GradientButton from "../components/GradientButton";
 
 export default function Profile() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -93,7 +94,15 @@ export default function Profile() {
   return (
     <>
       <Navbar />
-      <Box sx={{ p: 3, maxWidth: 500, mx: "auto" }}>
+      <Box
+        sx={{
+          p: 3,
+          maxWidth: 500,
+          mx: "auto",
+          background: "white",
+          borderRadius: 2,
+        }}
+      >
         <Typography variant="h4" gutterBottom>
           My Profile
         </Typography>
@@ -149,9 +158,7 @@ export default function Profile() {
             fullWidth
           />
 
-          <Button variant="contained" onClick={handleSave}>
-            💾 Save Profile
-          </Button>
+          <GradientButton onClick={handleSave}>💾 Save Profile</GradientButton>
         </Stack>
       </Box>
 

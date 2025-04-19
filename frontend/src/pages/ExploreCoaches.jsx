@@ -11,6 +11,7 @@ import {
 import Navbar from "../components/Navbar";
 import CoachProfileModal from "../components/CoachProfileModal";
 import { formatDate } from "../utils/formatDate";
+import GradientButton from "../components/GradientButton";
 
 export default function ExploreCoaches() {
   const [coaches, setCoaches] = useState([]);
@@ -63,14 +64,14 @@ export default function ExploreCoaches() {
                   <Typography variant="body2" color="text.secondary" noWrap>
                     {coach.bio}
                   </Typography>
-                  <Button
+                  <GradientButton
                     variant="outlined"
                     size="small"
                     sx={{ mt: 1 }}
                     onClick={() => openProfile(coach)}
                   >
                     View Profile
-                  </Button>
+                  </GradientButton>
                 </CardContent>
               </Card>
             </Grid>

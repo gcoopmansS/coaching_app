@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { formatDate } from "../utils/formatDate";
+import GradientButton from "../components/GradientButton";
 
 export default function CoachProfileModal({ coach, open, onClose }) {
   const runner = JSON.parse(localStorage.getItem("user"));
@@ -89,9 +90,9 @@ export default function CoachProfileModal({ coach, open, onClose }) {
               style={{ width: "100%", padding: 8, marginBottom: 8 }}
             />
 
-            <Button variant="contained" fullWidth onClick={handleRequest}>
-              Request Coaching
-            </Button>
+            <GradientButton onClick={handleRequest} fullWidth>
+              Request coaching
+            </GradientButton>
 
             {success && (
               <Typography color="success.main" sx={{ mt: 1 }}>

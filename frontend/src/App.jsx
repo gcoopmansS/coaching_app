@@ -7,6 +7,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ExploreCoaches from "./pages/ExploreCoaches";
 import CoachRequests from "./pages/CoachRequests";
 import CoachingPage from "./pages/CoachingPage";
+import RunnerOverviewPage from "./pages/RunnerOverviewPage";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       <Route path="/explore" element={<ExploreCoaches />} />
       <Route path="/coach/requests" element={<CoachRequests />} />
       <Route path="/coach/athlete/:id" element={<CoachingPage />} />
+      <Route path="/coach/runner/:id" element={<RunnerOverviewPage />} />
     </Routes>
   );
 }
