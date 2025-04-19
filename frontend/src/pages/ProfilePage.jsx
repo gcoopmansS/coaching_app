@@ -93,7 +93,6 @@ export default function Profile() {
 
   return (
     <>
-      <Navbar />
       <Box
         sx={{
           p: 3,

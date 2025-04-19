@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Box, TextField, Button, Typography, Alert } from "@mui/material";
+import { Box, TextField, Typography, Alert, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import GradientButton from "../components/GradientButton";
 
-export default function LoginPage() {
+export default function LoginPage({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,11 +23,8 @@ export default function LoginPage() {
 
     if (res.ok) {
       localStorage.setItem("user", JSON.stringify(data.user));
-      if (data.user.role === "runner") {
-        navigate("/runner");
-      } else {
-        navigate("/coach");
-      }
+      setUser(data.user);
+      navigate(data.user.role === "runner" ? "/runner" : "/coach");
     } else {
       setError(data.message);
     }
@@ -34,38 +32,47 @@ export default function LoginPage() {
 
   return (
     <Box sx={{ maxWidth: 400, mx: "auto", mt: 10 }}>
-      <Typography variant="h5" gutterBottom>
-        Login
+      <Typography variant="h4" gutterBottom align="center">
+        Log In
       </Typography>
-      {error && <Alert severity="error">{error}</Alert>}
-      <form onSubmit={handleLogin}>
-        <TextField
+      <Stack spacing={2}>
+        {error && <Alert severity="error">{error}</Alert>}
+
+        <form onSubmit={handleLogin}>
+          <TextField
+            fullWidth
+            label="Email"
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <GradientButton
+            color="primary"
+            fullWidth
+            type="submit"
+            sx={{ mt: 2 }}
+          >
+            Log In
+          </GradientButton>
+        </form>
+
+        <GradientButton
+          color="secondary"
           fullWidth
-          label="Email"
-          margin="normal"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          margin="normal"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button fullWidth variant="contained" type="submit" sx={{ mt: 2 }}>
-          Log In
-        </Button>
-        <Button
-          fullWidth
-          variant="text"
+          variant="contained"
           onClick={() => navigate("/signup")}
-          sx={{ mt: 1 }}
         >
           Don't have an account? Sign up
-        </Button>
-      </form>
+        </GradientButton>
+      </Stack>
     </Box>
   );
 }

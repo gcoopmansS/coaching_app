@@ -37,7 +37,6 @@ export default function ExploreCoaches() {
 
   return (
     <>
-      <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Explore Coaches

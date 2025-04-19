@@ -3,17 +3,15 @@ import {
   Box,
   Typography,
   TextField,
-  Button,
   MenuItem,
   Alert,
   Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import GradientButton from "../components/GradientButton";
 
 export default function SignupPage() {
   const navigate = useNavigate();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -55,71 +53,77 @@ export default function SignupPage() {
   };
 
   return (
-    <>
-      <Navbar />
-      <Box sx={{ p: 3, maxWidth: 400, mx: "auto" }}>
-        <Typography variant="h4" gutterBottom>
-          Sign Up
-        </Typography>
+    <Box sx={{ maxWidth: 400, mx: "auto", mt: 10 }}>
+      <Typography variant="h4" gutterBottom align="center">
+        Create an Account
+      </Typography>
 
-        <Stack spacing={2}>
-          {success && (
-            <Alert severity="success">
-              ✅ Account created! Redirecting to login...
-            </Alert>
-          )}
-          {error && <Alert severity="error">{error}</Alert>}
+      <Stack spacing={2}>
+        {success && (
+          <Alert severity="success">
+            ✅ Account created! Redirecting to login...
+          </Alert>
+        )}
+        {error && <Alert severity="error">{error}</Alert>}
 
-          <form onSubmit={handleSubmit}>
-            <TextField
-              label="Name"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              fullWidth
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              fullWidth
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              label="Password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              fullWidth
-              required
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              select
-              label="Role"
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              fullWidth
-              required
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="runner">Runner</MenuItem>
-              <MenuItem value="coach">Coach</MenuItem>
-            </TextField>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            select
+            label="Role"
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="runner">Runner</MenuItem>
+            <MenuItem value="coach">Coach</MenuItem>
+          </TextField>
 
-            <Button type="submit" variant="contained" fullWidth>
-              Sign Up
-            </Button>
-          </form>
-        </Stack>
-      </Box>
-    </>
+          <GradientButton type="submit" color="primary" fullWidth>
+            Sign Up
+          </GradientButton>
+        </form>
+
+        <GradientButton
+          color="success"
+          fullWidth
+          variant="contained"
+          onClick={() => navigate("/login")}
+        >
+          Already have an account? Log in
+        </GradientButton>
+      </Stack>
+    </Box>
   );
 }

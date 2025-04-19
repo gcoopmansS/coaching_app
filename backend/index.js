@@ -9,6 +9,7 @@ require("dotenv").config();
 const User = require("./models/User");
 const Connection = require("./models/Connection");
 const Workout = require("./models/Workout");
+const SavedWorkout = require("./models/SavedWorkout");
 
 const app = express();
 app.use(cors());
@@ -317,5 +318,40 @@ app.get("/api/users/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Fetch user by ID error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 📦 Create new saved workout
+app.post("/api/saved-workouts", async (req, res) => {
+  try {
+    const { title, blocks, coachId } = req.body;
+    const newWorkout = new SavedWorkout({ title, blocks, coachId });
+    await newWorkout.save();
+    res.status(201).json(newWorkout);
+  } catch (err) {
+    console.error("Error creating saved workout:", err);
+    res.status(500).json({ message: "Failed to save workout" });
+  }
+});
+
+// 📚 Get all saved workouts for coach
+app.get("/api/saved-workouts/:coachId", async (req, res) => {
+  try {
+    const workouts = await SavedWorkout.find({ coachId: req.params.coachId });
+    res.json(workouts);
+  } catch (err) {
+    console.error("Error fetching saved workouts:", err);
+    res.status(500).json({ message: "Failed to load saved workouts" });
+  }
+});
+
+// ❌ Delete saved workout
+app.delete("/api/saved-workouts/:id", async (req, res) => {
+  try {
+    await SavedWorkout.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting saved workout:", err);
+    res.status(500).json({ message: "Failed to delete" });
   }
 });

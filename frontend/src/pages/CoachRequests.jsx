@@ -9,6 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import Navbar from "../components/Navbar";
+import GradientButton from "../components/GradientButton";
 
 export default function CoachRequests() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -48,7 +49,6 @@ export default function CoachRequests() {
 
   return (
     <>
-      <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Coaching Requests

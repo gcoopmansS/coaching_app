@@ -27,7 +27,6 @@ export default function CoachDashboard() {
 
   return (
     <>
-      <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           My Athletes
