@@ -8,6 +8,7 @@ require("dotenv").config();
 
 const User = require("./models/User");
 const Connection = require("./models/Connection");
+const Workout = require("./models/Workout");
 
 const app = express();
 app.use(cors());
@@ -206,6 +207,21 @@ app.get("/api/users/:id/notifications", async (req, res) => {
   }
 });
 
+app.patch("/api/users/:id/notifications/mark-seen", async (req, res) => {
+  try {
+    const result = await User.updateOne(
+      { _id: req.params.id },
+      { $set: { "notifications.$[elem].seen": true } },
+      { arrayFilters: [{ "elem.seen": false }] }
+    );
+
+    res.json({ message: "Notifications marked as seen", result });
+  } catch (err) {
+    console.error("Error marking notifications:", err);
+    res.status(500).json({ message: "Failed to mark notifications as seen" });
+  }
+});
+
 app.patch("/api/connections/:id/status", async (req, res) => {
   const { status } = req.body;
 
@@ -262,5 +278,37 @@ app.get("/api/connections/coach/:coachId", async (req, res) => {
   } catch (err) {
     console.error("Error loading coach requests:", err);
     res.status(500).json({ message: "Failed to load requests" });
+  }
+});
+
+app.post("/api/workouts", async (req, res) => {
+  try {
+    const workout = new Workout(req.body);
+    await workout.save();
+    res.status(201).json({ message: "Workout saved!", workout });
+  } catch (err) {
+    console.error("Workout save error:", err);
+    res.status(500).json({ message: "Failed to save workout" });
+  }
+});
+
+app.get("/api/workouts/runner/:id", async (req, res) => {
+  try {
+    const workouts = await Workout.find({ runnerId: req.params.id });
+    res.json(workouts);
+  } catch (err) {
+    console.error("Failed to fetch workouts:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    console.error("❌ Fetch user by ID error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
