@@ -1,104 +1,125 @@
 import { useState } from "react";
 import {
   Box,
+  Typography,
   TextField,
   Button,
-  Typography,
   MenuItem,
   Alert,
+  Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState({
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     role: "runner",
   });
+
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSignup = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    try {
+      const res = await fetch("http://localhost:3000/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const res = await fetch("http://localhost:3000/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+      const data = await res.json();
 
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
-    } else {
-      setError(data.message);
+      if (res.ok) {
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        setError(data.message || "Signup failed");
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      setError("Server error");
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: "auto", mt: 10 }}>
-      <Typography variant="h5" gutterBottom>
-        Sign Up
-      </Typography>
-      {error && <Alert severity="error">{error}</Alert>}
-      <form onSubmit={handleSignup}>
-        <TextField
-          fullWidth
-          label="Name"
-          name="name"
-          margin="normal"
-          value={formData.name}
-          onChange={handleChange}
-        />
-        <TextField
-          fullWidth
-          label="Email"
-          name="email"
-          margin="normal"
-          value={formData.email}
-          onChange={handleChange}
-        />
-        <TextField
-          fullWidth
-          label="Password"
-          name="password"
-          type="password"
-          margin="normal"
-          value={formData.password}
-          onChange={handleChange}
-        />
-        <TextField
-          select
-          fullWidth
-          label="Role"
-          name="role"
-          margin="normal"
-          value={formData.role}
-          onChange={handleChange}
-        >
-          <MenuItem value="runner">Runner</MenuItem>
-          <MenuItem value="coach">Coach</MenuItem>
-        </TextField>
-        <Button fullWidth variant="contained" type="submit" sx={{ mt: 2 }}>
+    <>
+      <Navbar />
+      <Box sx={{ p: 3, maxWidth: 400, mx: "auto" }}>
+        <Typography variant="h4" gutterBottom>
           Sign Up
-        </Button>
-        <Button
-          fullWidth
-          variant="text"
-          onClick={() => navigate("/login")}
-          sx={{ mt: 1 }}
-        >
-          Already have an account? Log in
-        </Button>
-      </form>
-    </Box>
+        </Typography>
+
+        <Stack spacing={2}>
+          {success && (
+            <Alert severity="success">
+              ✅ Account created! Redirecting to login...
+            </Alert>
+          )}
+          {error && <Alert severity="error">{error}</Alert>}
+
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Name"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              select
+              label="Role"
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="runner">Runner</MenuItem>
+              <MenuItem value="coach">Coach</MenuItem>
+            </TextField>
+
+            <Button type="submit" variant="contained" fullWidth>
+              Sign Up
+            </Button>
+          </form>
+        </Stack>
+      </Box>
+    </>
   );
 }
