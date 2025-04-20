@@ -44,34 +44,42 @@ export default function ExploreCoaches() {
 
         <Grid container spacing={2}>
           {coaches.map((coach) => (
-            <Grid item xs={12} sm={6} md={4} key={coach._id}>
+            <Grid item xs={12} sm={6} md={5} key={coach._id}>
               <Card
-                sx={{ display: "flex", gap: 2, alignItems: "center", p: 2 }}
+                elevation={4}
+                sx={{
+                  height: 300, // ✅ fixed height
+                  minWidth: 200,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between", // space between avatar/content & button
+                  alignItems: "center",
+                  p: 2,
+                }}
               >
-                <Avatar
-                  src={`http://localhost:3000${coach.profilePicture || ""}`}
-                  sx={{ width: 64, height: 64 }}
-                />
-                <CardContent sx={{ flex: 1 }}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Avatar
+                    src={`http://localhost:3000${coach.profilePicture || ""}`}
+                    sx={{ width: 80, height: 80, mb: 1 }}
+                  />
                   <Typography variant="h6">{coach.name}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     {coach.city}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2">
                     🎂 {formatDate(coach.dateOfBirth)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {coach.bio}
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {coach.bio || "—"}
                   </Typography>
-                  <GradientButton
-                    variant="outlined"
-                    size="small"
-                    sx={{ mt: 1 }}
-                    onClick={() => openProfile(coach)}
-                  >
-                    View Profile
-                  </GradientButton>
-                </CardContent>
+                </Box>
+
+                <GradientButton
+                  onClick={() => openProfile(coach)}
+                  sx={{ mt: "auto" }}
+                >
+                  View Profile
+                </GradientButton>
               </Card>
             </Grid>
           ))}

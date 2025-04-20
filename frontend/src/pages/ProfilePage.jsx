@@ -67,8 +67,14 @@ export default function Profile() {
       const data = await res.json();
 
       if (res.ok) {
-        setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        const updatedUser = {
+          ...data.user,
+          id: data.user._id, // Ensure `id` is always present
+        };
+
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+
         setSnackbar({
           open: true,
           message: "✅ Profile updated successfully!",

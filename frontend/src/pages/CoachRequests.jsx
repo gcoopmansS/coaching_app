@@ -11,17 +11,22 @@ import {
 import Navbar from "../components/Navbar";
 import GradientButton from "../components/GradientButton";
 
-export default function CoachRequests() {
-  const user = JSON.parse(localStorage.getItem("user"));
+export default function CoachRequestsPage() {
   const [requests, setRequests] = useState([]);
   const [tab, setTab] = useState(0);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/connections/coach/${user.id}`)
-      .then((res) => res.json())
-      .then(setRequests)
-      .catch((err) => console.error("Failed to load requests:", err));
-  }, [user.id]);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      if (parsedUser?.id) {
+        fetch(`http://localhost:3000/api/connections/coach/${parsedUser.id}`)
+          .then((res) => res.json())
+          .then(setRequests)
+          .catch((err) => console.error("Error loading coach requests:", err));
+      }
+    }
+  }, []);
 
   const respondToRequest = async (id, status) => {
     const res = await fetch(

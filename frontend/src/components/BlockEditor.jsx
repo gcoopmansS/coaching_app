@@ -1,109 +1,187 @@
-// src/components/BlockEditor.jsx
+import { useState } from "react";
 import {
   Box,
   TextField,
   MenuItem,
-  Stack,
   IconButton,
   Typography,
+  Stack,
+  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import GradientButton from "./GradientButton";
 
-const blockTypes = [
-  { value: "warmup", label: "Warm-up" },
-  { value: "run", label: "Run" },
-  { value: "rest", label: "Rest" },
-  { value: "cooldown", label: "Cool-down" },
-  { value: "loop", label: "Repeat" },
-];
-
-const intensityOptions = ["none", "pace", "heartrate", "speed"];
+const blockTypes = ["warmup", "run", "rest", "cooldown", "loop"];
+const durationTypes = ["time", "distance"];
+const intensityTypes = ["none", "pace", "heartRate", "speed"];
 
 export default function BlockEditor({ block, onChange, onDelete }) {
-  const handleChange = (key, value) => {
-    onChange({ ...block, [key]: value });
+  const [editing, setEditing] = useState(block.editing ?? true);
+
+  const update = (field, value) => {
+    onChange({ ...block, [field]: value });
+  };
+
+  const toggleEdit = () => setEditing(!editing);
+
+  const handleNestedChange = (i, updated) => {
+    const updatedBlocks = [...(block.blocks || [])];
+    updatedBlocks[i] = updated;
+    update("blocks", updatedBlocks);
+  };
+
+  const addNestedBlock = () => {
+    const newBlock = {
+      type: "run",
+      durationType: "distance",
+      duration: "",
+      intensityType: "none",
+      intensity: "",
+    };
+    update("blocks", [...(block.blocks || []), newBlock]);
+  };
+
+  const deleteNestedBlock = (i) => {
+    const updatedBlocks = [...(block.blocks || [])];
+    updatedBlocks.splice(i, 1);
+    update("blocks", updatedBlocks);
   };
 
   return (
     <Box
       sx={{
-        border: "1px solid #ddd",
-        borderRadius: 2,
         p: 2,
+        borderRadius: 2,
         mb: 2,
-        backgroundColor: "#f9f9f9",
+        border: "1px solid #ccc",
+        background: "#f9f9f9",
       }}
     >
-      <Stack spacing={2}>
-        <Stack direction="row" spacing={2} alignItems="center">
+      {editing ? (
+        <Stack spacing={2}>
+          <Stack direction="row" justifyContent="space-between">
+            <Typography variant="subtitle1">🧱 Block</Typography>
+            <IconButton onClick={onDelete}>
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+
           <TextField
             select
             label="Type"
             value={block.type}
-            onChange={(e) => handleChange("type", e.target.value)}
-            sx={{ width: 180 }}
+            onChange={(e) => update("type", e.target.value)}
           >
-            {blockTypes.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
+            {blockTypes.map((t) => (
+              <MenuItem key={t} value={t}>
+                {t}
               </MenuItem>
             ))}
           </TextField>
 
-          <IconButton onClick={onDelete} color="error">
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
+          {block.type === "loop" && (
+            <>
+              <TextField
+                label="Repeat"
+                type="number"
+                value={block.repeat || ""}
+                onChange={(e) => update("repeat", e.target.value)}
+              />
 
-        {(block.type === "run" || block.type === "rest") && (
-          <>
-            <TextField
-              label="Distance (e.g. 2km or 200m)"
-              value={block.distance || ""}
-              onChange={(e) => handleChange("distance", e.target.value)}
-              fullWidth
-            />
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="subtitle2">Nested Blocks</Typography>
 
-            <TextField
-              select
-              label="Intensity"
-              value={block.intensity || "none"}
-              onChange={(e) => handleChange("intensity", e.target.value)}
-              fullWidth
-            >
-              {intensityOptions.map((opt) => (
-                <MenuItem key={opt} value={opt}>
-                  {opt === "none"
-                    ? "None"
-                    : opt.charAt(0).toUpperCase() + opt.slice(1)}
-                </MenuItem>
+              {(block.blocks || []).map((b, i) => (
+                <BlockEditor
+                  key={i}
+                  block={b}
+                  onChange={(updated) => handleNestedChange(i, updated)}
+                  onDelete={() => deleteNestedBlock(i)}
+                />
               ))}
-            </TextField>
-          </>
-        )}
 
-        {block.type === "loop" && (
-          <>
-            <TextField
-              type="number"
-              label="Repeat Count"
-              value={block.repeat || ""}
-              onChange={(e) => handleChange("repeat", e.target.value)}
-              fullWidth
-            />
-            <Typography variant="body2" color="text.secondary">
-              You can add nested blocks later.
-            </Typography>
-          </>
-        )}
+              <GradientButton
+                onClick={addNestedBlock}
+                size="small"
+                color="secondary"
+              >
+                ➕ Add Inner Block
+              </GradientButton>
+            </>
+          )}
 
-        <TextField
-          label="Notes / Description"
-          value={block.description || ""}
-          onChange={(e) => handleChange("description", e.target.value)}
-          fullWidth
-        />
-      </Stack>
+          {block.type !== "loop" && (
+            <>
+              <TextField
+                label="Description"
+                value={block.description || ""}
+                onChange={(e) => update("description", e.target.value)}
+              />
+
+              <TextField
+                select
+                label="Duration Type"
+                value={block.durationType || "distance"}
+                onChange={(e) => update("durationType", e.target.value)}
+              >
+                {durationTypes.map((d) => (
+                  <MenuItem key={d} value={d}>
+                    {d}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                label={
+                  block.durationType === "distance"
+                    ? "Distance (km)"
+                    : "Time (min)"
+                }
+                value={block.duration || ""}
+                onChange={(e) => update("duration", e.target.value)}
+              />
+
+              <TextField
+                select
+                label="Intensity Type"
+                value={block.intensityType || "none"}
+                onChange={(e) => update("intensityType", e.target.value)}
+              >
+                {intensityTypes.map((i) => (
+                  <MenuItem key={i} value={i}>
+                    {i}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              {block.intensityType !== "none" && (
+                <TextField
+                  label="Intensity"
+                  value={block.intensity || ""}
+                  onChange={(e) => update("intensity", e.target.value)}
+                />
+              )}
+            </>
+          )}
+
+          <GradientButton onClick={toggleEdit} size="small" color="neutral">
+            ✅ Done
+          </GradientButton>
+        </Stack>
+      ) : (
+        <Box onClick={toggleEdit}>
+          <Typography>
+            📌 {block.type.toUpperCase()} – {block.duration || "No duration"}{" "}
+            {block.durationType}
+          </Typography>
+          {block.type === "loop" &&
+            (block.blocks || []).map((b, i) => (
+              <Typography key={i} sx={{ ml: 2 }}>
+                🔁 {b.type}: {b.duration} {b.durationType}
+              </Typography>
+            ))}
+        </Box>
+      )}
     </Box>
   );
 }
