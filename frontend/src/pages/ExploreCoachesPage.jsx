@@ -6,91 +6,79 @@ import {
   Card,
   CardContent,
   Avatar,
-  Button,
 } from "@mui/material";
-import Navbar from "../components/Navbar";
-import CoachProfileModal from "../components/CoachProfileModal";
-import { formatDate } from "../utils/formatDate";
 import GradientButton from "../components/GradientButton";
+import { formatDate } from "../utils/formatDate";
+import CoachProfileModal from "../components/CoachProfileModal";
 
-export default function ExploreCoaches() {
+export default function ExploreCoachesPage() {
   const [coaches, setCoaches] = useState([]);
   const [selectedCoach, setSelectedCoach] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/coaches")
+    fetch("http://localhost:3000/api/users/coaches")
       .then((res) => res.json())
       .then(setCoaches)
-      .catch((err) => console.error("Error loading coaches:", err));
+      .catch((err) => console.error("Error fetching coaches:", err));
   }, []);
 
-  const openProfile = (coach) => {
-    setSelectedCoach(coach);
-    setModalOpen(true);
-  };
-
-  const closeProfile = () => {
-    setModalOpen(false);
-    setSelectedCoach(null);
-  };
-
   return (
-    <>
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Explore Coaches
-        </Typography>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        🧭 Explore Coaches
+      </Typography>
 
-        <Grid container spacing={2}>
-          {coaches.map((coach) => (
-            <Grid item xs={12} sm={6} md={5} key={coach._id}>
-              <Card
-                elevation={4}
-                sx={{
-                  height: 300, // ✅ fixed height
-                  minWidth: 200,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between", // space between avatar/content & button
-                  alignItems: "center",
-                  p: 2,
-                }}
-              >
-                <Box sx={{ textAlign: "center" }}>
+      <Grid container spacing={3}>
+        {coaches.map((coach) => (
+          <Grid item xs={12} sm={6} md={4} key={coach._id}>
+            <Card
+              sx={{
+                minHeight: 230,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                   <Avatar
                     src={`http://localhost:3000${coach.profilePicture || ""}`}
-                    sx={{ width: 80, height: 80, mb: 1 }}
+                    sx={{ mr: 2 }}
                   />
-                  <Typography variant="h6">{coach.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {coach.city}
-                  </Typography>
-                  <Typography variant="body2">
-                    🎂 {formatDate(coach.dateOfBirth)}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    {coach.bio || "—"}
-                  </Typography>
+                  <Box>
+                    <Typography variant="h6">{coach.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      📍 {coach.city}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      🎂 {formatDate(coach.dateOfBirth)}
+                    </Typography>
+                  </Box>
                 </Box>
 
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  {coach.bio || "No bio provided."}
+                </Typography>
+              </CardContent>
+
+              <Box sx={{ p: 2 }}>
                 <GradientButton
-                  onClick={() => openProfile(coach)}
-                  sx={{ mt: "auto" }}
+                  fullWidth
+                  onClick={() => setSelectedCoach(coach)}
                 >
                   View Profile
                 </GradientButton>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+              </Box>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
       <CoachProfileModal
         coach={selectedCoach}
-        open={modalOpen}
-        onClose={closeProfile}
+        open={!!selectedCoach}
+        onClose={() => setSelectedCoach(null)}
       />
-    </>
+    </Box>
   );
 }

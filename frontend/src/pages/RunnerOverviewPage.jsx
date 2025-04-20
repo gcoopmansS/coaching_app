@@ -6,7 +6,7 @@ import WorkoutModal from "../components/WorkoutModal";
 import GradientButton from "../components/GradientButton";
 
 export default function RunnerOverviewPage() {
-  const { id: runnerId } = useParams();
+  const { runnerId } = useParams();
   const [runner, setRunner] = useState(null);
   const [workouts, setWorkouts] = useState([]);
   const [showModal, setShowModal] = useState(false);

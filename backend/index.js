@@ -113,46 +113,37 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.post("/api/connections", async (req, res) => {
-  const { runnerId, coachId, goal, distance, pace } = req.body;
-
   try {
+    const { runnerId, coachId, goal, distance, pace } = req.body;
+
+    // Check if a connection already exists
     const existing = await Connection.findOne({
       runnerId,
       coachId,
+      status: { $in: ["pending", "accepted"] },
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        message:
+          "You already have an active or pending request with this coach.",
+      });
+    }
+
+    const newConnection = new Connection({
+      runnerId,
+      coachId,
+      goal,
+      distance,
+      pace,
       status: "pending",
     });
-    if (existing) {
-      return res
-        .status(409)
-        .json({ message: "You already have a pending request to this coach." });
-    }
 
-    const request = new Connection({ runnerId, coachId, goal, distance, pace });
-    await request.save();
-
-    // After await request.save();
-
-    const coach = await User.findById(coachId);
-    const runner = await User.findById(runnerId); // ✅ fetch the runner too
-
-    if (coach && runner) {
-      const notification = {
-        message: `${runner.name} requested coaching`,
-        type: "info",
-        createdAt: new Date(),
-        seen: false,
-      };
-      coach.notifications.push(notification);
-      console.log("📬 Pushing notification to coach:", notification);
-
-      await coach.save();
-      console.log("✅ Coach after save:", coach);
-    }
-
-    res.status(201).json({ message: "Request sent!", connection: request });
+    await newConnection.save();
+    res.status(201).json(newConnection);
   } catch (err) {
-    console.error("Request error:", err);
-    res.status(500).json({ message: "Failed to send request" });
+    console.error("Error creating connection:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -282,6 +273,24 @@ app.get("/api/connections/coach/:coachId", async (req, res) => {
   }
 });
 
+app.get("/api/connections/check/:runnerId/:coachId", async (req, res) => {
+  try {
+    const connection = await Connection.findOne({
+      runnerId: req.params.runnerId,
+      coachId: req.params.coachId,
+    });
+
+    if (connection) {
+      return res.json({ exists: true, status: connection.status });
+    }
+
+    return res.json({ exists: false });
+  } catch (err) {
+    console.error("Error checking connection:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 app.post("/api/workouts", async (req, res) => {
   try {
     const newWorkout = new Workout({
@@ -307,6 +316,17 @@ app.get("/api/workouts/runner/:id", async (req, res) => {
   } catch (err) {
     console.error("Failed to fetch workouts:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ This must come before /api/users/:id
+app.get("/api/users/coaches", async (req, res) => {
+  try {
+    const coaches = await User.find({ role: "coach" });
+    res.json(coaches);
+  } catch (err) {
+    console.error("Error fetching coaches:", err);
+    res.status(500).json({ message: "Failed to fetch coaches" });
   }
 });
 
