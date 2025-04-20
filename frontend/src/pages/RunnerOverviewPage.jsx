@@ -1,34 +1,34 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Box, Typography, Button, Paper, Stack } from "@mui/material";
+import { useEffect, useState, useCallback } from "react";
+import { Box, Typography, Paper, Stack } from "@mui/material";
 import Navbar from "../components/Navbar";
 import WorkoutModal from "../components/WorkoutModal";
 import GradientButton from "../components/GradientButton";
 
 export default function RunnerOverviewPage() {
-  const { id } = useParams();
+  const { id: runnerId } = useParams();
   const [runner, setRunner] = useState(null);
   const [workouts, setWorkouts] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    fetch(`http://localhost:3000/api/users/${id}`)
-      .then((res) => res.json())
-      .then(setRunner);
-
-    fetchWorkouts();
-  }, [id]);
-
-  const fetchWorkouts = () => {
-    fetch(`http://localhost:3000/api/workouts/runner/${id}`)
+  const fetchWorkouts = useCallback(() => {
+    fetch(`http://localhost:3000/api/workouts/runner/${runnerId}`)
       .then((res) => res.json())
       .then(setWorkouts)
       .catch((err) => console.error("Error loading workouts:", err));
-  };
+  }, [runnerId]);
+
+  useEffect(() => {
+    fetch(`http://localhost:3000/api/users/${runnerId}`)
+      .then((res) => res.json())
+      .then(setRunner)
+      .catch((err) => console.error("Error loading runner:", err));
+
+    fetchWorkouts();
+  }, [runnerId, fetchWorkouts]);
 
   return (
     <>
-      <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Runner Overview
@@ -57,13 +57,12 @@ export default function RunnerOverviewPage() {
           </GradientButton>
         </Stack>
 
-        {/* Placeholder workout list */}
         <Paper sx={{ p: 2, mb: 3 }}>
           {workouts.length > 0 ? (
             <ul>
               {workouts.map((w) => (
                 <li key={w._id}>
-                  {w.date} – {w.title} ({w.distance} km)
+                  {new Date(w.date).toLocaleDateString()} – {w.title}
                 </li>
               ))}
             </ul>
@@ -72,7 +71,6 @@ export default function RunnerOverviewPage() {
           )}
         </Paper>
 
-        {/* Placeholder for future stats/chart */}
         <Paper sx={{ p: 2 }}>
           <Typography>📊 Weekly stats coming soon...</Typography>
         </Paper>
@@ -83,7 +81,7 @@ export default function RunnerOverviewPage() {
             setShowModal(false);
             if (refresh) fetchWorkouts();
           }}
-          runnerId={id}
+          runnerId={runnerId}
         />
       </Box>
     </>

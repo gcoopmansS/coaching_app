@@ -57,7 +57,7 @@ function App() {
           element={<SavedWorkoutsPage user={user} />}
         />
         <Route
-          path="/coach/athlete/:runnerId"
+          path="/coach/runner/:runnerId"
           element={<RunnerOverviewPage />}
         />
       </Routes>

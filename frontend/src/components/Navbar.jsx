@@ -68,7 +68,17 @@ export default function Navbar({ user: propUser, setUser }) {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Notifications user={user} />
 
-          <IconButton onClick={handleMenuOpen} sx={{ ml: 2 }}>
+          <IconButton
+            onClick={handleMenuOpen}
+            sx={{
+              ml: 2,
+              "&:focus": {
+                outline: "none",
+                boxShadow: "none",
+              },
+            }}
+          >
+            {" "}
             <Avatar
               alt={user.name}
               src={`http://localhost:3000${user.profilePicture || ""}`}
@@ -99,18 +109,20 @@ export default function Navbar({ user: propUser, setUser }) {
                 Explore Coaches
               </MenuItem>
             )}
-            {user.role === "coach" && (
-              <>
-                <MenuItem onClick={() => handleNavigate("/coach/requests")}>
-                  Coaching Requests
-                </MenuItem>
-                <MenuItem
-                  onClick={() => handleNavigate("/coach/saved-workouts")}
-                >
-                  Saved Workouts
-                </MenuItem>
-              </>
-            )}
+            {user.role === "coach" && [
+              <MenuItem
+                key="requests"
+                onClick={() => handleNavigate("/coach/requests")}
+              >
+                Coaching Requests
+              </MenuItem>,
+              <MenuItem
+                key="saved"
+                onClick={() => handleNavigate("/coach/saved-workouts")}
+              >
+                Saved Workouts
+              </MenuItem>,
+            ]}
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </Box>

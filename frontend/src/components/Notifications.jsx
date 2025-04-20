@@ -48,7 +48,16 @@ export default function Notifications({ user }) {
 
   return (
     <>
-      <IconButton color="inherit" onClick={handleOpen}>
+      <IconButton
+        color="inherit"
+        onClick={handleOpen}
+        sx={{
+          "&:focus": {
+            outline: "none",
+            boxShadow: "none",
+          },
+        }}
+      >
         <Badge badgeContent={unseenCount} color="error">
           <NotificationsIcon />
         </Badge>
