@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Avatar,
+  CardMedia,
 } from "@mui/material";
 import GradientButton from "../components/GradientButton";
 import { formatDate } from "../utils/formatDate";
@@ -23,62 +24,66 @@ export default function ExploreCoachesPage() {
   }, []);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        🧭 Explore Coaches
-      </Typography>
+    <>
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Explore Coaches
+        </Typography>
 
-      <Grid container spacing={3}>
-        {coaches.map((coach) => (
-          <Grid item xs={12} sm={6} md={4} key={coach._id}>
-            <Card
-              sx={{
-                minHeight: 230,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Avatar
-                    src={`http://localhost:3000${coach.profilePicture || ""}`}
-                    sx={{ mr: 2 }}
-                  />
-                  <Box>
-                    <Typography variant="h6">{coach.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      📍 {coach.city}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      🎂 {formatDate(coach.dateOfBirth)}
-                    </Typography>
-                  </Box>
+        <Grid container spacing={2}>
+          {coaches.map((coach) => (
+            <Grid item xs={12} sm={6} md={4} key={coach._id}>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  height="160"
+                  image={
+                    coach.profilePicture
+                      ? `http://localhost:3000${coach.profilePicture}`
+                      : "https://via.placeholder.com/300x160?text=No+Image"
+                  }
+                  alt={coach.name}
+                />
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6">{coach.name}</Typography>
+                  <Typography variant="body2">
+                    📍 {coach.city || "Unknown City"}
+                  </Typography>
+                  <Typography variant="body2">
+                    🎂{" "}
+                    {coach.dateOfBirth
+                      ? formatDate(coach.dateOfBirth)
+                      : "Unknown DOB"}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {coach.bio || "No bio provided."}
+                  </Typography>
+                </CardContent>
+                <Box sx={{ p: 2, pt: 0 }}>
+                  <GradientButton
+                    fullWidth
+                    onClick={() => setSelectedCoach(coach)}
+                  >
+                    View Profile
+                  </GradientButton>
                 </Box>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
 
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  {coach.bio || "No bio provided."}
-                </Typography>
-              </CardContent>
-
-              <Box sx={{ p: 2 }}>
-                <GradientButton
-                  fullWidth
-                  onClick={() => setSelectedCoach(coach)}
-                >
-                  View Profile
-                </GradientButton>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      <CoachProfileModal
-        coach={selectedCoach}
-        open={!!selectedCoach}
-        onClose={() => setSelectedCoach(null)}
-      />
-    </Box>
+        <CoachProfileModal
+          coach={selectedCoach}
+          open={!!selectedCoach}
+          onClose={() => setSelectedCoach(null)}
+        />
+      </Box>
+    </>
   );
 }
