@@ -15,10 +15,11 @@ const blockTypes = ["warmup", "run", "rest", "cooldown", "loop"];
 const durationTypes = ["time", "distance"];
 const intensityTypes = ["none", "pace", "heartRate", "speed"];
 
-export default function BlockEditor({ block, onChange, onDelete }) {
+export default function BlockEditor({ block = {}, onChange, onDelete }) {
   const [editing, setEditing] = useState(block.editing ?? true);
 
   const update = (field, value) => {
+    if (!onChange) return;
     onChange({ ...block, [field]: value });
   };
 
@@ -69,7 +70,7 @@ export default function BlockEditor({ block, onChange, onDelete }) {
           <TextField
             select
             label="Type"
-            value={block.type}
+            value={block.type || ""}
             onChange={(e) => update("type", e.target.value)}
           >
             {blockTypes.map((t) => (
@@ -169,9 +170,9 @@ export default function BlockEditor({ block, onChange, onDelete }) {
           </GradientButton>
         </Stack>
       ) : (
-        <Box onClick={toggleEdit}>
+        <Box onClick={toggleEdit} sx={{ cursor: "pointer" }}>
           <Typography>
-            📌 {block.type.toUpperCase()} – {block.duration || "No duration"}{" "}
+            📌 {block.type?.toUpperCase()} – {block.duration || "No duration"}{" "}
             {block.durationType}
           </Typography>
           {block.type === "loop" &&
