@@ -1,8 +1,15 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
-import { Box, Typography, Paper, Stack } from "@mui/material";
-import WorkoutModal from "../components/WorkoutModal";
+import { Box, Typography, Paper, Avatar, Stack, Divider } from "@mui/material";
 import GradientButton from "../components/GradientButton";
+import WorkoutModal from "../components/WorkoutModal";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+
+// Styles for calendar (you can customize later)
+
+import "../styles/fullcalendar.css";
 
 export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
@@ -26,63 +33,77 @@ export default function RunnerOverviewPage() {
     fetchWorkouts();
   }, [runnerId, fetchWorkouts]);
 
-  return (
-    <>
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Runner Overview
-        </Typography>
+  const calendarEvents = workouts.map((workout) => ({
+    id: workout._id,
+    title: workout.title,
+    start: workout.date,
+  }));
 
-        {runner && (
-          <Paper sx={{ p: 2, mb: 3 }}>
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Runner Overview
+      </Typography>
+
+      {runner && (
+        <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center" }}>
+          <Avatar
+            src={`http://localhost:3000${runner.profilePicture || ""}`}
+            sx={{ width: 64, height: 64, mr: 2 }}
+          />
+          <Box>
             <Typography variant="h6">{runner.name}</Typography>
             <Typography>Email: {runner.email}</Typography>
             <Typography>City: {runner.city || "—"}</Typography>
-          </Paper>
+          </Box>
+        </Paper>
+      )}
+
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 2 }}
+      >
+        <Typography variant="h6">Planned Workouts</Typography>
+        <GradientButton variant="contained" onClick={() => setShowModal(true)}>
+          + Schedule Workout
+        </GradientButton>
+      </Stack>
+
+      <Paper sx={{ p: 2, mb: 3 }}>
+        {workouts.length > 0 ? (
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridWeek"
+            events={calendarEvents}
+            firstDay={1} // Monday
+            height="auto"
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "",
+            }}
+          />
+        ) : (
+          <Typography>No workouts scheduled yet.</Typography>
         )}
+      </Paper>
 
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 2 }}
-        >
-          <Typography variant="h6">Planned Workouts</Typography>
-          <GradientButton
-            variant="contained"
-            onClick={() => setShowModal(true)}
-          >
-            + Schedule Workout
-          </GradientButton>
-        </Stack>
+      <Divider sx={{ my: 3 }} />
 
-        <Paper sx={{ p: 2, mb: 3 }}>
-          {workouts.length > 0 ? (
-            <ul>
-              {workouts.map((w) => (
-                <li key={w._id}>
-                  {new Date(w.date).toLocaleDateString()} – {w.title}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <Typography>No workouts scheduled yet.</Typography>
-          )}
-        </Paper>
+      <Paper sx={{ p: 2 }}>
+        <Typography>📊 Weekly stats coming soon...</Typography>
+      </Paper>
 
-        <Paper sx={{ p: 2 }}>
-          <Typography>📊 Weekly stats coming soon...</Typography>
-        </Paper>
-
-        <WorkoutModal
-          open={showModal}
-          onClose={(refresh) => {
-            setShowModal(false);
-            if (refresh) fetchWorkouts();
-          }}
-          runnerId={runnerId}
-        />
-      </Box>
-    </>
+      <WorkoutModal
+        open={showModal}
+        onClose={(refresh) => {
+          setShowModal(false);
+          if (refresh) fetchWorkouts();
+        }}
+        runnerId={runnerId}
+      />
+    </Box>
   );
 }
