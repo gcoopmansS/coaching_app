@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { Box, Typography, Paper, Stack } from "@mui/material";
-import Navbar from "../components/Navbar";
 import WorkoutModal from "../components/WorkoutModal";
 import GradientButton from "../components/GradientButton";
 
