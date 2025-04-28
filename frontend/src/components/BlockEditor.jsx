@@ -9,14 +9,24 @@ import {
   Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import CheckIcon from "@mui/icons-material/Check";
 import GradientButton from "./GradientButton";
 
 const blockTypes = ["warmup", "run", "rest", "cooldown", "loop"];
 const durationTypes = ["time", "distance"];
 const intensityTypes = ["none", "pace", "heartRate", "speed"];
 
+const blockColors = {
+  warmup: "#e53935", // red
+  run: "#1e88e5", // blue
+  rest: "#9e9e9e", // grey
+  cooldown: "#43a047", // green
+  loop: "#6d4c41", // brown
+};
+
 export default function BlockEditor({ block = {}, onChange, onDelete }) {
-  const [editing, setEditing] = useState(block.editing ?? true);
+  const [editing, setEditing] = useState(block.editing ?? false);
 
   const update = (field, value) => {
     if (!onChange) return;
@@ -48,20 +58,25 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
     update("blocks", updatedBlocks);
   };
 
+  const color = blockColors[block.type] || "#ccc";
+
   return (
     <Box
       sx={{
-        p: 2,
-        borderRadius: 2,
-        mb: 2,
-        border: "1px solid #ccc",
+        p: 1.5,
+        borderRadius: 1,
+        mb: 1.5,
+        borderLeft: `6px solid ${color}`,
         background: "#f9f9f9",
+        fontSize: "0.9rem",
       }}
     >
       {editing ? (
-        <Stack spacing={2}>
+        <Stack spacing={1.5}>
           <Stack direction="row" justifyContent="space-between">
-            <Typography variant="subtitle1">🧱 Block</Typography>
+            <Typography variant="subtitle1">
+              {block.type ? block.type.toUpperCase() : "BLOCK"}
+            </Typography>
             <IconButton onClick={onDelete}>
               <DeleteIcon />
             </IconButton>
@@ -88,7 +103,6 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 value={block.repeat || ""}
                 onChange={(e) => update("repeat", e.target.value)}
               />
-
               <Divider sx={{ my: 1 }} />
               <Typography variant="subtitle2">Nested Blocks</Typography>
 
@@ -136,7 +150,7 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 label={
                   block.durationType === "distance"
                     ? "Distance (km)"
-                    : "Time (min)"
+                    : "Time (minutes)"
                 }
                 value={block.duration || ""}
                 onChange={(e) => update("duration", e.target.value)}
@@ -165,22 +179,64 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
             </>
           )}
 
-          <GradientButton onClick={toggleEdit} size="small" color="neutral">
-            ✅ Done
-          </GradientButton>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <GradientButton
+              onClick={toggleEdit}
+              size="small"
+              startIcon={<CheckIcon />}
+              sx={{ borderRadius: "20px", px: 2, py: 0.5 }}
+            >
+              Done
+            </GradientButton>
+          </Box>
         </Stack>
       ) : (
-        <Box onClick={toggleEdit} sx={{ cursor: "pointer" }}>
-          <Typography>
-            📌 {block.type?.toUpperCase()} – {block.duration || "No duration"}{" "}
-            {block.durationType}
-          </Typography>
-          {block.type === "loop" &&
-            (block.blocks || []).map((b, i) => (
-              <Typography key={i} sx={{ ml: 2 }}>
-                🔁 {b.type}: {b.duration} {b.durationType}
+        <Box>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="subtitle1" fontWeight="bold">
+              {block.type
+                ? block.type.charAt(0).toUpperCase() + block.type.slice(1)
+                : "Block"}
+            </Typography>
+            <IconButton onClick={toggleEdit}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            {block.description && (
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                {block.description}
               </Typography>
-            ))}
+            )}
+          </Typography>
+
+          <Divider sx={{ my: 1 }} />
+
+          <Stack direction="row" justifyContent="space-between">
+            <Box>
+              <Typography variant="caption" color="textSecondary">
+                Total Distance / Duration
+              </Typography>
+              <Typography>
+                {block.duration || "-"}{" "}
+                {block.durationType === "distance" ? "km" : "min"}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" color="textSecondary">
+                Intensity
+              </Typography>
+              <Typography>
+                {block.intensityType === "none" ? "-" : block.intensity || "-"}
+              </Typography>
+            </Box>
+          </Stack>
         </Box>
       )}
     </Box>
