@@ -17,12 +17,26 @@ export default function Notifications({ user }) {
   const open = Boolean(anchorEl);
 
   useEffect(() => {
-    if (user?.id) {
-      fetch(`http://localhost:3000/api/users/${user.id}/notifications`)
-        .then((res) => res.json())
-        .then(setNotifications)
-        .catch((err) => console.error("Notification fetch error:", err));
+    const token = localStorage.getItem("token");
+
+    if (!token || !user?.id) {
+      console.error("No token or user ID found. Skipping notifications fetch.");
+      return;
     }
+
+    fetch(`http://localhost:3000/api/users/${user.id}/notifications`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch notifications");
+        }
+        return res.json();
+      })
+      .then(setNotifications)
+      .catch((err) => console.error("Notification fetch error:", err));
   }, [user]);
 
   const unseenCount = notifications.filter((n) => !n.seen).length;
@@ -30,12 +44,21 @@ export default function Notifications({ user }) {
   const handleOpen = (event) => {
     setAnchorEl(event.currentTarget);
 
-    // Mark notifications as seen
     const userId = user?._id || user?.id;
     if (!userId) return;
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found. Cannot mark notifications as seen.");
+      return;
+    }
+
+    // Mark notifications as seen
     fetch(`http://localhost:3000/api/users/${userId}/notifications/mark-seen`, {
       method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     // Update local state

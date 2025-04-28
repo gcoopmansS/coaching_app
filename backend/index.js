@@ -1,22 +1,35 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
 require("dotenv").config();
 
-const User = require("./models/User");
-const Connection = require("./models/Connection");
-const Workout = require("./models/Workout");
-const SavedWorkout = require("./models/SavedWorkout");
+// Import routes
+const authRoutes = require("./routes/authRoutes");
+const profileRoutes = require("./routes/profileRoutes");
+const connectionRoutes = require("./routes/connectionRoutes");
+const workoutRoutes = require("./routes/workoutRoutes");
+const savedWorkoutRoutes = require("./routes/savedWorkoutRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const userRoutes = require("./routes/userRoutes"); // ⬅️ New!
 
 const app = express();
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api", profileRoutes);
+app.use("/api", connectionRoutes);
+app.use("/api", workoutRoutes);
+app.use("/api", savedWorkoutRoutes);
+app.use("/api", notificationRoutes);
+app.use("/api", userRoutes); // ⬅️ Users (fetch coaches, fetch user by id)
 
 // MongoDB Connection
 mongoose
@@ -31,347 +44,8 @@ mongoose
     console.error("❌ MongoDB connection error:", err);
   });
 
-// Multer setup for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = path.join(__dirname, "uploads");
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir);
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
-  },
-});
-const upload = multer({ storage });
-
-// === ROUTES ===
-
-// Sign Up
-app.post("/api/signup", async (req, res) => {
-  const { name, email, password, role } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "Email already in use" });
-
-    const hashedPassword = await require("bcrypt").hash(password, 10);
-
-    const user = new User({ name, email, password: hashedPassword, role });
-    await user.save();
-
-    res.status(201).json({
-      message: "User created",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        city: user.city,
-        dateOfBirth: user.dateOfBirth,
-        bio: user.bio,
-        profilePicture: user.profilePicture,
-      },
-    });
-  } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Signup failed" });
-  }
-});
-
-// Log In
-app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
-
-    const match = await require("bcrypt").compare(password, user.password);
-    if (!match) return res.status(401).json({ message: "Invalid credentials" });
-
-    res.json({
-      message: `Welcome, ${user.name}`,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        city: user.city,
-        dateOfBirth: user.dateOfBirth,
-        bio: user.bio,
-        profilePicture: user.profilePicture,
-      },
-    });
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Login failed" });
-  }
-});
-
-app.post("/api/connections", async (req, res) => {
-  try {
-    const { runnerId, coachId, goal, distance, pace } = req.body;
-
-    // Check if a connection already exists
-    const existing = await Connection.findOne({
-      runnerId,
-      coachId,
-      status: { $in: ["pending", "accepted"] },
-    });
-
-    if (existing) {
-      return res.status(400).json({
-        message:
-          "You already have an active or pending request with this coach.",
-      });
-    }
-
-    const newConnection = new Connection({
-      runnerId,
-      coachId,
-      goal,
-      distance,
-      pace,
-      status: "pending",
-    });
-
-    await newConnection.save();
-    res.status(201).json(newConnection);
-  } catch (err) {
-    console.error("Error creating connection:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Profile update (with image)
-app.post("/api/profile", upload.single("profilePicture"), async (req, res) => {
-  const { userId, city, dateOfBirth, bio } = req.body;
-
-  try {
-    const update = {};
-    if (city) update.city = city;
-    if (dateOfBirth) update.dateOfBirth = dateOfBirth;
-    if (bio) update.bio = bio;
-    if (req.file) update.profilePicture = `/uploads/${req.file.filename}`;
-
-    const updatedUser = await User.findByIdAndUpdate(userId, update, {
-      new: true,
-    });
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({ user: updatedUser });
-  } catch (err) {
-    console.error("Profile update error:", err);
-    res.status(500).json({ message: "Failed to update profile" });
-  }
-});
-
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
-
-app.get("/api/coaches", async (req, res) => {
-  try {
-    const coaches = await User.find({ role: "coach" });
-    res.json(coaches);
-  } catch (err) {
-    console.error("Failed to fetch coaches:", err);
-    res.status(500).json({ message: "Could not load coaches" });
-  }
-});
-
-app.get("/api/users/:id/notifications", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.json(user.notifications || []);
-  } catch (err) {
-    console.error("Fetch user notifications error:", err);
-    res.status(500).json({ message: "Failed to load notifications" });
-  }
-});
-
-app.patch("/api/users/:id/notifications/mark-seen", async (req, res) => {
-  try {
-    const result = await User.updateOne(
-      { _id: req.params.id },
-      { $set: { "notifications.$[elem].seen": true } },
-      { arrayFilters: [{ "elem.seen": false }] }
-    );
-
-    res.json({ message: "Notifications marked as seen", result });
-  } catch (err) {
-    console.error("Error marking notifications:", err);
-    res.status(500).json({ message: "Failed to mark notifications as seen" });
-  }
-});
-
-app.patch("/api/connections/:id/status", async (req, res) => {
-  const { status } = req.body;
-
-  try {
-    const connection = await Connection.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    ).populate("runnerId coachId");
-
-    if (!connection) {
-      return res.status(404).json({ message: "Connection not found." });
-    }
-
-    const runnerId = connection.runnerId?._id || connection.runnerId;
-    const coachName = connection.coachId?.name || "a coach";
-
-    const message =
-      status === "accepted"
-        ? `🎉 Coach ${coachName} accepted your coaching request!`
-        : `❌ Coach ${coachName} rejected your coaching request.`;
-
-    const notification = {
-      message,
-      type: status === "accepted" ? "success" : "error",
-      createdAt: new Date(),
-      seen: false,
-    };
-
-    const updateResult = await User.updateOne(
-      { _id: runnerId },
-      { $push: { notifications: notification } }
-    );
-
-    console.log("📡 Notification update result:", updateResult);
-
-    if (updateResult.modifiedCount === 0) {
-      console.warn("⚠️ Notification was not pushed. Runner ID may not match.");
-    }
-
-    res.json(connection);
-  } catch (err) {
-    console.error("🔥 Update request status error:", err);
-    res.status(500).json({ message: "Failed to update status" });
-  }
-});
-
-app.get("/api/connections/coach/:coachId", async (req, res) => {
-  try {
-    const requests = await Connection.find({
-      coachId: req.params.coachId,
-    }).populate("runnerId");
-    res.json(requests);
-  } catch (err) {
-    console.error("Error loading coach requests:", err);
-    res.status(500).json({ message: "Failed to load requests" });
-  }
-});
-
-app.get("/api/connections/check/:runnerId/:coachId", async (req, res) => {
-  try {
-    const connection = await Connection.findOne({
-      runnerId: req.params.runnerId,
-      coachId: req.params.coachId,
-    });
-
-    if (connection) {
-      return res.json({ exists: true, status: connection.status });
-    }
-
-    return res.json({ exists: false });
-  } catch (err) {
-    console.error("Error checking connection:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.post("/api/workouts", async (req, res) => {
-  try {
-    const newWorkout = new Workout({
-      coachId: req.body.coachId,
-      runnerId: req.body.runnerId,
-      title: req.body.title,
-      date: req.body.date,
-      distance: req.body.distance,
-    });
-
-    await newWorkout.save();
-    res.status(201).json(newWorkout);
-  } catch (err) {
-    console.error("Workout save error:", err);
-    res.status(500).json({ message: "Failed to save workout" });
-  }
-});
-
-app.get("/api/workouts/runner/:id", async (req, res) => {
-  try {
-    const workouts = await Workout.find({ runnerId: req.params.id });
-    res.json(workouts);
-  } catch (err) {
-    console.error("Failed to fetch workouts:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// ✅ This must come before /api/users/:id
-app.get("/api/users/coaches", async (req, res) => {
-  try {
-    const coaches = await User.find({ role: "coach" });
-    res.json(coaches);
-  } catch (err) {
-    console.error("Error fetching coaches:", err);
-    res.status(500).json({ message: "Failed to fetch coaches" });
-  }
-});
-
-app.get("/api/users/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
-  } catch (err) {
-    console.error("❌ Fetch user by ID error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// 📦 Create new saved workout
-app.post("/api/saved-workouts", async (req, res) => {
-  try {
-    const { title, blocks, coachId } = req.body;
-    const newWorkout = new SavedWorkout({ title, blocks, coachId });
-    await newWorkout.save();
-    res.status(201).json(newWorkout);
-  } catch (err) {
-    console.error("Error creating saved workout:", err);
-    res.status(500).json({ message: "Failed to save workout" });
-  }
-});
-
-// 📚 Get all saved workouts for coach
-app.get("/api/saved-workouts/:coachId", async (req, res) => {
-  try {
-    const workouts = await SavedWorkout.find({ coachId: req.params.coachId });
-    res.json(workouts);
-  } catch (err) {
-    console.error("Error fetching saved workouts:", err);
-    res.status(500).json({ message: "Failed to load saved workouts" });
-  }
-});
-
-// ❌ Delete saved workout
-app.delete("/api/saved-workouts/:id", async (req, res) => {
-  try {
-    await SavedWorkout.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting saved workout:", err);
-    res.status(500).json({ message: "Failed to delete" });
-  }
 });

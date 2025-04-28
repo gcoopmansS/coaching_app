@@ -42,6 +42,8 @@ export default function CoachingPage() {
   };
 
   const submitWorkout = async () => {
+    const token = localStorage.getItem("token");
+
     const workout = {
       runnerId: id,
       coachId: coach.id,
@@ -53,7 +55,10 @@ export default function CoachingPage() {
 
     const res = await fetch("http://localhost:3000/api/workouts", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(workout),
     });
 

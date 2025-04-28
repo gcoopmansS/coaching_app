@@ -27,7 +27,13 @@ export default function WorkoutModal({ open, onClose, runnerId }) {
 
   useEffect(() => {
     if (coach?.id) {
-      fetch(`http://localhost:3000/api/saved-workouts/${coach.id}`)
+      const token = localStorage.getItem("token");
+
+      fetch(`http://localhost:3000/api/saved-workouts/${coach.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
         .then((res) => res.json())
         .then(setSavedWorkouts)
         .catch((err) => console.error("Failed to fetch saved workouts:", err));
@@ -87,9 +93,14 @@ export default function WorkoutModal({ open, onClose, runnerId }) {
     };
 
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch("http://localhost:3000/api/workouts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
 

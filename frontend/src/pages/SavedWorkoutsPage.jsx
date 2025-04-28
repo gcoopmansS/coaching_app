@@ -20,7 +20,13 @@ export default function SavedWorkoutsPage() {
   useEffect(() => {
     if (!user || user.role !== "coach") return;
 
-    fetch(`http://localhost:3000/api/saved-workouts/${user.id}`)
+    const token = localStorage.getItem("token");
+
+    fetch(`http://localhost:3000/api/saved-workouts/${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data) => setWorkouts(data))
       .catch((err) => console.error("Error loading saved workouts:", err));
@@ -31,8 +37,13 @@ export default function SavedWorkoutsPage() {
     if (!confirmed) return;
 
     try {
+      const token = localStorage.getItem("token");
+
       await fetch(`http://localhost:3000/api/saved-workouts/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       setWorkouts((prev) => prev.filter((w) => w._id !== id));
     } catch (err) {

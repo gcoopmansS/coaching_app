@@ -13,7 +13,7 @@ export default function LoginPage({ setUser }) {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("http://localhost:3000/api/login", {
+    const res = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -22,6 +22,7 @@ export default function LoginPage({ setUser }) {
     const data = await res.json();
 
     if (res.ok) {
+      localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
       navigate(data.user.role === "runner" ? "/runner" : "/coach");

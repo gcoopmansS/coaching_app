@@ -17,10 +17,16 @@ export default function CoachRequestsPage() {
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token"); // ⬅️ NEW
+
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       if (parsedUser?.id) {
-        fetch(`http://localhost:3000/api/connections/coach/${parsedUser.id}`)
+        fetch(`http://localhost:3000/api/connections/coach/${parsedUser.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // ⬅️ NEW
+          },
+        })
           .then((res) => res.json())
           .then(setRequests)
           .catch((err) => console.error("Error loading coach requests:", err));
@@ -29,11 +35,16 @@ export default function CoachRequestsPage() {
   }, []);
 
   const respondToRequest = async (id, status) => {
+    const token = localStorage.getItem("token"); // ⬅️ NEW
+
     const res = await fetch(
       `http://localhost:3000/api/connections/${id}/status`,
       {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ⬅️ NEW
+        },
         body: JSON.stringify({ status }),
       }
     );

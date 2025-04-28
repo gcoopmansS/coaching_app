@@ -8,7 +8,6 @@ import {
   Grid,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 
 export default function CoachDashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -16,14 +15,35 @@ export default function CoachDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/connections/coach/${user.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const accepted = data.filter((r) => r.status === "accepted");
-        setRequests(accepted);
+    const token = localStorage.getItem("token");
+    if (!token || !user?.id) {
+      console.error(
+        "No token or user ID found. Skipping coach dashboard fetch."
+      );
+      return;
+    }
+
+    fetch(`http://localhost:3000/api/connections/coach/${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (res) => {
+        if (res.status === 401) {
+          console.warn("Unauthorized, clearing session...");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login"; // Auto-redirect user back to login
+          return;
+        }
+        if (!res.ok) {
+          throw new Error("Failed to fetch athletes");
+        }
+        const data = await res.json();
+        setRequests(data.filter((r) => r.status === "accepted")); // now safe because we know data is array
       })
       .catch((err) => console.error("Failed to load athletes:", err));
-  }, [user.id]);
+  }, [user?.id]);
 
   return (
     <>
