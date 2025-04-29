@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
 require("dotenv").config();
 
 // Import routes
@@ -29,7 +31,7 @@ app.use("/api", connectionRoutes);
 app.use("/api", workoutRoutes);
 app.use("/api", savedWorkoutRoutes);
 app.use("/api", notificationRoutes);
-app.use("/api", userRoutes); // ⬅️ Users (fetch coaches, fetch user by id)
+app.use("/api", userRoutes);
 
 // MongoDB Connection
 mongoose
@@ -49,3 +51,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
