@@ -51,6 +51,41 @@ export default function RunnerOverviewPage() {
     },
   }));
 
+  const renderEventContent = (eventInfo) => {
+    return (
+      <Box
+        tabIndex={0}
+        sx={{
+          width: "100%",
+          backgroundColor: "#ffe3ec",
+          border: "1px solid #f48fb1",
+          borderRadius: 1,
+          padding: "4px",
+          fontSize: "0.85rem",
+          textAlign: "center",
+          color: "#ad1457",
+          whiteSpace: "normal",
+          fontWeight: 500,
+          transition: "all 0.3s ease", // ✅ smooth transition
+          outline: "none",
+          "&:hover": {
+            backgroundColor: "#f8bbd0", // darker pink on hover
+            borderColor: "#f06292", // slightly stronger border
+            boxShadow: 3, // small shadow on hover
+            cursor: "pointer", // pointer cursor
+          },
+          "&:focus": {
+            backgroundColor: "#ffe3ec", // 🛠 On focus, reset background
+            borderColor: "#f48fb1",
+            boxShadow: "none",
+          },
+        }}
+      >
+        {eventInfo.event.title}
+      </Box>
+    );
+  };
+
   const handleEventClick = (info) => {
     const clickedWorkout = workouts.find((w) => w._id === info.event.id);
     if (clickedWorkout) {
@@ -117,6 +152,7 @@ export default function RunnerOverviewPage() {
             events={calendarEvents}
             eventClick={handleEventClick}
             height="auto"
+            eventContent={renderEventContent}
           />
         ) : (
           <Typography>No workouts scheduled yet.</Typography>
