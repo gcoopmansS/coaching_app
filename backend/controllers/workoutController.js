@@ -26,3 +26,25 @@ exports.getRunnerWorkouts = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.updateWorkoutDate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.body;
+
+    const updatedWorkout = await Workout.findByIdAndUpdate(
+      id,
+      { date },
+      { new: true }
+    );
+
+    if (!updatedWorkout) {
+      return res.status(404).json({ message: "Workout not found" });
+    }
+
+    res.json(updatedWorkout);
+  } catch (error) {
+    console.error("Error updating workout date:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

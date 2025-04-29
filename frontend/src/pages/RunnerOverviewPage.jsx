@@ -17,6 +17,7 @@ import GradientButton from "../components/GradientButton";
 import WorkoutModal from "../components/WorkoutModal";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 
 export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
@@ -94,6 +95,34 @@ export default function RunnerOverviewPage() {
     }
   };
 
+  const handleEventDrop = (info) => {
+    const workoutId = info.event.id;
+    const newDate = info.event.startStr;
+
+    fetch(`http://localhost:3000/api/workouts/${workoutId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ date: newDate }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to update workout date");
+        }
+        return res.json();
+      })
+      .then(() => {
+        console.log("✅ Workout rescheduled!");
+        fetchWorkouts(); // 🛠 reload workouts from server!
+      })
+      .catch((err) => {
+        console.error("Workout reschedule error:", err);
+        info.revert(); // revert drag visually if backend failed
+      });
+  };
+
   const getBlockColor = (type) => {
     switch (type) {
       case "warmup":
@@ -146,13 +175,15 @@ export default function RunnerOverviewPage() {
       <Paper sx={{ p: 2, mb: 3 }}>
         {workouts.length > 0 ? (
           <FullCalendar
-            plugins={[dayGridPlugin]}
+            plugins={[dayGridPlugin, interactionPlugin]} // <-- added interactionPlugin
             initialView="dayGridWeek"
             firstDay={1}
             events={calendarEvents}
             eventClick={handleEventClick}
-            height="auto"
             eventContent={renderEventContent}
+            editable={true} // <-- allow drag-and-drop
+            eventDrop={handleEventDrop} // <-- add drop handler
+            height="auto"
           />
         ) : (
           <Typography>No workouts scheduled yet.</Typography>

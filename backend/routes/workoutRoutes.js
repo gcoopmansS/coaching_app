@@ -9,6 +9,7 @@ const express = require("express");
 const {
   createWorkout,
   getRunnerWorkouts,
+  updateWorkoutDate,
 } = require("../controllers/workoutController");
 const { protect } = require("../middlewares/authMiddleware");
 
@@ -89,5 +90,7 @@ router.post("/workouts", protect, createWorkout);
  */
 
 router.get("/workouts/runner/:id", getRunnerWorkouts);
+
+router.patch("/workouts/:id", updateWorkoutDate); // <-- Add this!
 
 module.exports = router;
