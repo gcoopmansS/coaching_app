@@ -1,16 +1,9 @@
 const Workout = require("../models/Workout");
 
-// ✅ Create a new workout (including blocks)
+// ✅ Create a new workout
 exports.createWorkout = async (req, res) => {
   try {
-    const {
-      coachId,
-      runnerId,
-      title,
-      date,
-      distance,
-      blocks, // ✅ now destructured
-    } = req.body;
+    const { coachId, runnerId, title, date, distance, blocks } = req.body;
 
     const newWorkout = new Workout({
       coachId,
@@ -18,7 +11,7 @@ exports.createWorkout = async (req, res) => {
       title,
       date,
       distance,
-      blocks, // ✅ ensure it's passed correctly
+      blocks,
     });
 
     await newWorkout.save();
@@ -29,7 +22,7 @@ exports.createWorkout = async (req, res) => {
   }
 };
 
-// ✅ Get all workouts for a runner (includes blocks)
+// ✅ Get all workouts for a runner
 exports.getRunnerWorkouts = async (req, res) => {
   try {
     const workouts = await Workout.find({ runnerId: req.params.id });
@@ -40,15 +33,15 @@ exports.getRunnerWorkouts = async (req, res) => {
   }
 };
 
-// ✅ PATCH: Update only the date of a workout
-exports.updateWorkoutDate = async (req, res) => {
+// ✅ Update full workout (title, date, blocks)
+exports.updateWorkout = async (req, res) => {
   try {
     const { id } = req.params;
-    const { date } = req.body;
+    const { title, date, blocks } = req.body;
 
     const updatedWorkout = await Workout.findByIdAndUpdate(
       id,
-      { date },
+      { title, date, blocks },
       { new: true }
     );
 
@@ -58,7 +51,7 @@ exports.updateWorkoutDate = async (req, res) => {
 
     res.json(updatedWorkout);
   } catch (error) {
-    console.error("Error updating workout date:", error);
+    console.error("Error updating workout:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

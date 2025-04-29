@@ -10,13 +10,12 @@ import {
   Select,
   InputLabel,
   FormControl,
-  Divider,
+  IconButton,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import GradientButton from "./GradientButton";
 import BlockEditor from "./BlockEditor";
 import CloseIcon from "@mui/icons-material/Close";
-import IconButton from "@mui/material/IconButton";
 
 export default function WorkoutModal({
   open,
@@ -31,14 +30,12 @@ export default function WorkoutModal({
   const [date, setDate] = useState("");
   const [blocks, setBlocks] = useState([]);
 
+  // Load saved workouts
   useEffect(() => {
+    const token = localStorage.getItem("token");
     if (coach?.id) {
-      const token = localStorage.getItem("token");
-
       fetch(`http://localhost:3000/api/saved-workouts/${coach.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
         .then(setSavedWorkouts)
@@ -46,60 +43,55 @@ export default function WorkoutModal({
     }
   }, [coach?.id]);
 
+  // Handle open/edit
   useEffect(() => {
-    if (open) {
-      if (workoutToEdit) {
-        setTitle(workoutToEdit.title || "");
-        setDate(workoutToEdit.date?.slice(0, 10) || "");
-        setBlocks(workoutToEdit.blocks || []);
-        setSelectedId("");
-      } else {
-        setTitle("");
-        setDate("");
-        setSelectedId("");
-        setBlocks([
-          {
-            type: "warmup",
-            durationType: "distance",
-            duration: "1",
-            intensityType: "none",
-            intensity: "",
-            description: "",
-            editing: false,
-          },
-          {
-            type: "run",
-            durationType: "distance",
-            duration: "2",
-            intensityType: "pace",
-            intensity: "6:00",
-            description: "",
-            editing: false,
-          },
-          {
-            type: "cooldown",
-            durationType: "distance",
-            duration: "1",
-            intensityType: "none",
-            intensity: "",
-            description: "",
-            editing: false,
-          },
-        ]);
-      }
+    if (workoutToEdit) {
+      setTitle(workoutToEdit.title || "");
+      setDate(workoutToEdit.date?.slice(0, 10) || "");
+      setBlocks(workoutToEdit.blocks || []);
+    } else if (open) {
+      setTitle("");
+      setDate("");
+      setBlocks([
+        {
+          type: "warmup",
+          durationType: "distance",
+          duration: "1",
+          intensityType: "none",
+          intensity: "",
+          description: "",
+        },
+        {
+          type: "run",
+          durationType: "distance",
+          duration: "2",
+          intensityType: "pace",
+          intensity: "6:00",
+          description: "",
+        },
+        {
+          type: "cooldown",
+          durationType: "distance",
+          duration: "1",
+          intensityType: "none",
+          intensity: "",
+          description: "",
+        },
+      ]);
     }
   }, [open, workoutToEdit]);
 
   const handleSelectSaved = (id) => {
     setSelectedId(id);
-    const workout = savedWorkouts.find((w) => w._id === id);
-    if (workout) {
-      setTitle(workout.title);
-      setBlocks(workout.blocks || []);
+    const selected = savedWorkouts.find((w) => w._id === id);
+    if (selected) {
+      setTitle(selected.title);
+      setBlocks(selected.blocks || []);
     }
   };
 
   const handleSave = async () => {
+    const token = localStorage.getItem("token");
     const payload = {
       runnerId,
       coachId: coach.id,
@@ -109,8 +101,6 @@ export default function WorkoutModal({
     };
 
     try {
-      const token = localStorage.getItem("token");
-
       const url = workoutToEdit
         ? `http://localhost:3000/api/workouts/${workoutToEdit._id}`
         : `http://localhost:3000/api/workouts`;
@@ -127,18 +117,18 @@ export default function WorkoutModal({
       });
 
       if (res.ok) {
-        onClose(true); // refresh workouts
+        onClose(true);
       } else {
-        console.error("Failed to save workout");
+        console.error("❌ Failed to save workout.");
       }
     } catch (err) {
-      console.error("Workout save error:", err);
+      console.error("🔥 Workout save error:", err);
     }
   };
 
-  const addRunBlock = () => {
-    setBlocks((prev) => [
-      ...prev,
+  const addBlock = () => {
+    setBlocks([
+      ...blocks,
       {
         type: "run",
         durationType: "distance",
@@ -146,26 +136,24 @@ export default function WorkoutModal({
         intensityType: "none",
         intensity: "",
         description: "",
-        editing: true,
       },
     ]);
   };
 
-  const addRepeatBlock = () => {
-    setBlocks((prev) => [
-      ...prev,
+  const addRepeat = () => {
+    setBlocks([
+      ...blocks,
       {
         type: "repeat",
-        repeat: "2",
+        repeat: 2,
         blocks: [
           {
             type: "run",
             durationType: "distance",
             duration: "1",
             intensityType: "pace",
-            intensity: "6:00",
+            intensity: "5:30",
             description: "",
-            editing: false,
           },
           {
             type: "rest",
@@ -174,10 +162,8 @@ export default function WorkoutModal({
             intensityType: "none",
             intensity: "",
             description: "",
-            editing: false,
           },
         ],
-        editing: true,
       },
     ]);
   };
@@ -196,82 +182,76 @@ export default function WorkoutModal({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
+      <DialogContent>
+        <Box sx={{ fontSize: "0.9rem" }}>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Start from saved workout</InputLabel>
+              <Select
+                value={selectedId}
+                onChange={(e) => handleSelectSaved(e.target.value)}
+                label="Start from saved workout"
+              >
+                <MenuItem value="">None</MenuItem>
+                {savedWorkouts.map((w) => (
+                  <MenuItem key={w._id} value={w._id}>
+                    {w.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-      <DialogContent sx={{ px: 3, py: 2 }}>
-        <Stack spacing={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Start from saved workout</InputLabel>
-            <Select
-              value={selectedId}
-              onChange={(e) => handleSelectSaved(e.target.value)}
-              label="Start from saved workout"
-            >
-              <MenuItem value="">None</MenuItem>
-              {savedWorkouts.map((w) => (
-                <MenuItem key={w._id} value={w._id}>
-                  {w.title}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            fullWidth
-            size="small"
-            label="Workout Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          <TextField
-            fullWidth
-            size="small"
-            type="date"
-            label="Date"
-            InputLabelProps={{ shrink: true }}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-
-          <Divider sx={{ my: 1.5 }} />
-          <Typography variant="h6">Workout Builder</Typography>
-
-          {blocks.map((block, i) => (
-            <BlockEditor
-              key={i}
-              block={block}
-              onChange={(updated) => {
-                const newBlocks = [...blocks];
-                newBlocks[i] = updated;
-                setBlocks(newBlocks);
-              }}
-              onDelete={() => {
-                const newBlocks = [...blocks];
-                newBlocks.splice(i, 1);
-                setBlocks(newBlocks);
-              }}
-            />
-          ))}
-
-          <Stack direction="row" spacing={2}>
-            <GradientButton size="small" onClick={addRunBlock}>
-              Add Block
-            </GradientButton>
-            <GradientButton
+            <TextField
+              fullWidth
               size="small"
-              onClick={addRepeatBlock}
-              color="secondary"
-            >
-              Add Repeat
-            </GradientButton>
+              label="Workout Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+
+            <TextField
+              fullWidth
+              size="small"
+              type="date"
+              label="Date"
+              InputLabelProps={{ shrink: true }}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+
+            {blocks.map((block, i) => (
+              <BlockEditor
+                key={i}
+                block={block}
+                onChange={(updated) => {
+                  const newBlocks = [...blocks];
+                  newBlocks[i] = updated;
+                  setBlocks(newBlocks);
+                }}
+                onDelete={() => {
+                  const newBlocks = [...blocks];
+                  newBlocks.splice(i, 1);
+                  setBlocks(newBlocks);
+                }}
+              />
+            ))}
+
+            <Stack direction="row" spacing={2}>
+              <GradientButton onClick={addBlock} variant="outlined">
+                Add Block
+              </GradientButton>
+              <GradientButton onClick={addRepeat} variant="outlined">
+                Add Repeat
+              </GradientButton>
+            </Stack>
+
+            <Box sx={{ textAlign: "right" }}>
+              <GradientButton onClick={handleSave} variant="contained">
+                Save Workout
+              </GradientButton>
+            </Box>
           </Stack>
-
-          <Divider sx={{ my: 2 }} />
-
-          <GradientButton color="primary" onClick={handleSave}>
-            {workoutToEdit ? "Save Changes" : "Schedule Workout"}
-          </GradientButton>
-        </Stack>
+        </Box>
       </DialogContent>
     </Dialog>
   );

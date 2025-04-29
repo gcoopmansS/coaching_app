@@ -6,21 +6,20 @@ import {
   Paper,
   Avatar,
   Stack,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
-import Tooltip from "@mui/material/Tooltip";
 import GradientButton from "../components/GradientButton";
 import WorkoutModal from "../components/WorkoutModal";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { Button } from "@mui/material";
+import BlockPreview from "../components/WorkoutPreviewBlock";
 
 export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
@@ -32,14 +31,22 @@ export default function RunnerOverviewPage() {
   const [editWorkout, setEditWorkout] = useState(null);
 
   const fetchWorkouts = useCallback(() => {
-    fetch(`http://localhost:3000/api/workouts/runner/${runnerId}`)
+    const token = localStorage.getItem("token");
+    fetch(`http://localhost:3000/api/workouts/runner/${runnerId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then(setWorkouts)
       .catch((err) => console.error("Error loading workouts:", err));
   }, [runnerId]);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/users/${runnerId}`)
+    const token = localStorage.getItem("token");
+    fetch(`http://localhost:3000/api/users/${runnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((res) => res.json())
       .then(setRunner)
       .catch((err) => console.error("Error loading runner:", err));
@@ -53,13 +60,12 @@ export default function RunnerOverviewPage() {
     date: workout.date,
     extendedProps: {
       blocks: workout.blocks,
-      coachId: workout.coachId, // 🛠 Make sure coachId is available here!
+      coachId: workout.coachId,
     },
   }));
 
   const renderEventContent = (eventInfo) => {
     const loggedInCoachId = JSON.parse(localStorage.getItem("user"))?.id;
-
     const isMyWorkout =
       eventInfo.event.extendedProps.coachId === loggedInCoachId;
 
@@ -78,16 +84,16 @@ export default function RunnerOverviewPage() {
           color: isMyWorkout ? "#ad1457" : "#777",
           whiteSpace: "normal",
           fontWeight: 500,
-          transition: "all 0.3s ease", // ✅ smooth transition
+          transition: "all 0.3s ease",
           outline: "none",
           "&:hover": {
-            backgroundColor: "#f8bbd0", // darker pink on hover
-            borderColor: "#f06292", // slightly stronger border
-            boxShadow: 3, // small shadow on hover
-            cursor: "pointer", // pointer cursor
+            backgroundColor: "#f8bbd0",
+            borderColor: "#f06292",
+            boxShadow: 3,
+            cursor: "pointer",
           },
           "&:focus": {
-            backgroundColor: "#ffe3ec", // 🛠 On focus, reset background
+            backgroundColor: "#ffe3ec",
             borderColor: "#f48fb1",
             boxShadow: "none",
           },
@@ -118,7 +124,7 @@ export default function RunnerOverviewPage() {
     const clickedWorkout = workouts.find((w) => w._id === info.event.id);
     if (clickedWorkout) {
       const loggedInCoachId = JSON.parse(localStorage.getItem("user"))?.id;
-      const editable = clickedWorkout.coachId === loggedInCoachId; // 🛠 check ownership
+      const editable = clickedWorkout.coachId === loggedInCoachId;
       setSelectedWorkout({
         ...clickedWorkout,
         blocks: clickedWorkout.blocks || [],
@@ -141,36 +147,14 @@ export default function RunnerOverviewPage() {
       body: JSON.stringify({ date: newDate }),
     })
       .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to update workout date");
-        }
+        if (!res.ok) throw new Error("Failed to update workout date");
         return res.json();
       })
-      .then(() => {
-        console.log("✅ Workout rescheduled!");
-        fetchWorkouts(); // 🛠 reload workouts from server!
-      })
+      .then(() => fetchWorkouts())
       .catch((err) => {
         console.error("Workout reschedule error:", err);
-        info.revert(); // revert drag visually if backend failed
+        info.revert();
       });
-  };
-
-  const getBlockColor = (type) => {
-    switch (type) {
-      case "warmup":
-        return "#ff6b6b"; // red
-      case "run":
-        return "#339af0"; // blue
-      case "rest":
-        return "#ffd43b"; // yellow
-      case "cooldown":
-        return "#69db7c"; // green
-      case "loop":
-        return "#845ef7"; // purple
-      default:
-        return "#adb5bd"; // gray fallback
-    }
   };
 
   return (
@@ -208,14 +192,14 @@ export default function RunnerOverviewPage() {
       <Paper sx={{ p: 2, mb: 3 }}>
         {workouts.length > 0 ? (
           <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]} // <-- added interactionPlugin
+            plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridWeek"
             firstDay={1}
             events={calendarEvents}
             eventClick={handleEventClick}
             eventContent={renderEventContent}
-            editable={true} // <-- allow drag-and-drop
-            eventDrop={handleEventDrop} // <-- add drop handler
+            editable
+            eventDrop={handleEventDrop}
             height="auto"
           />
         ) : (
@@ -223,19 +207,17 @@ export default function RunnerOverviewPage() {
         )}
       </Paper>
 
-      {/* Workout Scheduling Modal */}
       <WorkoutModal
         open={showModal}
         onClose={(refresh) => {
           setShowModal(false);
-          setEditWorkout(null); // clear
+          setEditWorkout(null);
           if (refresh) fetchWorkouts();
         }}
         runnerId={runnerId}
         workoutToEdit={editWorkout}
       />
 
-      {/* Workout Preview Modal */}
       <Dialog
         open={openPreview}
         onClose={() => setOpenPreview(false)}
@@ -256,52 +238,28 @@ export default function RunnerOverviewPage() {
         </DialogTitle>
 
         <DialogContent sx={{ p: 3 }}>
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+            {new Date(selectedWorkout?.date).toLocaleDateString()}
+          </Typography>
+
           <Stack spacing={2}>
             {selectedWorkout?.blocks?.map((block, i) => (
-              <Box
-                key={i}
-                sx={{
-                  borderLeft: `6px solid ${getBlockColor(block.type)}`,
-                  p: 2,
-                  background: "#fafafa",
-                  borderRadius: 2,
-                  boxShadow: 1,
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  {block.type?.toUpperCase()}
-                </Typography>
-                {block.description && (
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    {block.description}
-                  </Typography>
-                )}
-                <Stack direction="row" spacing={2}>
-                  <Typography variant="body2">
-                    ⏱ {block.duration} {block.durationType}
-                  </Typography>
-                  {block.intensityType !== "none" && block.intensity && (
-                    <Typography variant="body2">
-                      🔥 {block.intensityType}: {block.intensity}
-                    </Typography>
-                  )}
-                </Stack>
-              </Box>
+              <BlockPreview key={i} block={block} />
             ))}
           </Stack>
 
           {selectedWorkout?.editable && (
             <Box sx={{ mt: 3, textAlign: "right" }}>
-              <Button
+              <GradientButton
                 variant="contained"
                 onClick={() => {
                   setOpenPreview(false);
-                  setEditWorkout(selectedWorkout); // pass to modal
+                  setEditWorkout(selectedWorkout);
                   setShowModal(true);
                 }}
               >
-                ✏️ Edit Workout
-              </Button>
+                Edit Workout
+              </GradientButton>
             </Box>
           )}
         </DialogContent>
