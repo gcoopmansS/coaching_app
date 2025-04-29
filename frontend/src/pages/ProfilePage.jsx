@@ -59,8 +59,13 @@ export default function Profile() {
     }
 
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch("http://localhost:3000/api/profile", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 

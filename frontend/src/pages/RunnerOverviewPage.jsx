@@ -13,11 +13,14 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import PersonIcon from "@mui/icons-material/Person";
+import Tooltip from "@mui/material/Tooltip";
 import GradientButton from "../components/GradientButton";
 import WorkoutModal from "../components/WorkoutModal";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { Button } from "@mui/material";
 
 export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
@@ -26,6 +29,7 @@ export default function RunnerOverviewPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [openPreview, setOpenPreview] = useState(false);
+  const [editWorkout, setEditWorkout] = useState(null);
 
   const fetchWorkouts = useCallback(() => {
     fetch(`http://localhost:3000/api/workouts/runner/${runnerId}`)
@@ -49,10 +53,16 @@ export default function RunnerOverviewPage() {
     date: workout.date,
     extendedProps: {
       blocks: workout.blocks,
+      coachId: workout.coachId, // 🛠 Make sure coachId is available here!
     },
   }));
 
   const renderEventContent = (eventInfo) => {
+    const loggedInCoachId = JSON.parse(localStorage.getItem("user"))?.id;
+
+    const isMyWorkout =
+      eventInfo.event.extendedProps.coachId === loggedInCoachId;
+
     return (
       <Box
         tabIndex={0}
@@ -62,9 +72,10 @@ export default function RunnerOverviewPage() {
           border: "1px solid #f48fb1",
           borderRadius: 1,
           padding: "4px",
+          paddingRight: isMyWorkout ? "4px" : "16px",
           fontSize: "0.85rem",
-          textAlign: "center",
-          color: "#ad1457",
+          textAlign: "left",
+          color: isMyWorkout ? "#ad1457" : "#777",
           whiteSpace: "normal",
           fontWeight: 500,
           transition: "all 0.3s ease", // ✅ smooth transition
@@ -80,9 +91,25 @@ export default function RunnerOverviewPage() {
             borderColor: "#f48fb1",
             boxShadow: "none",
           },
+          overflow: "hidden",
+          textOverflow: "ellipsis",
         }}
       >
         {eventInfo.event.title}
+
+        {!isMyWorkout && (
+          <Tooltip title="Planned by other coach" arrow>
+            <PersonIcon
+              sx={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                fontSize: "1rem",
+                color: "#999",
+              }}
+            />
+          </Tooltip>
+        )}
       </Box>
     );
   };
@@ -90,7 +117,13 @@ export default function RunnerOverviewPage() {
   const handleEventClick = (info) => {
     const clickedWorkout = workouts.find((w) => w._id === info.event.id);
     if (clickedWorkout) {
-      setSelectedWorkout(clickedWorkout);
+      const loggedInCoachId = JSON.parse(localStorage.getItem("user"))?.id;
+      const editable = clickedWorkout.coachId === loggedInCoachId; // 🛠 check ownership
+      setSelectedWorkout({
+        ...clickedWorkout,
+        blocks: clickedWorkout.blocks || [],
+        editable,
+      });
       setOpenPreview(true);
     }
   };
@@ -195,9 +228,11 @@ export default function RunnerOverviewPage() {
         open={showModal}
         onClose={(refresh) => {
           setShowModal(false);
+          setEditWorkout(null); // clear
           if (refresh) fetchWorkouts();
         }}
         runnerId={runnerId}
+        workoutToEdit={editWorkout}
       />
 
       {/* Workout Preview Modal */}
@@ -255,22 +290,24 @@ export default function RunnerOverviewPage() {
                     </Typography>
                   )}
                 </Stack>
-                {block.type === "loop" && block.blocks?.length > 0 && (
-                  <Box sx={{ mt: 1, pl: 2 }}>
-                    {block.blocks.map((inner, idx) => (
-                      <Typography
-                        key={idx}
-                        variant="body2"
-                        sx={{ fontStyle: "italic" }}
-                      >
-                        🔁 {inner.type} - {inner.duration} {inner.durationType}
-                      </Typography>
-                    ))}
-                  </Box>
-                )}
               </Box>
             ))}
           </Stack>
+
+          {selectedWorkout?.editable && (
+            <Box sx={{ mt: 3, textAlign: "right" }}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setOpenPreview(false);
+                  setEditWorkout(selectedWorkout); // pass to modal
+                  setShowModal(true);
+                }}
+              >
+                ✏️ Edit Workout
+              </Button>
+            </Box>
+          )}
         </DialogContent>
       </Dialog>
     </Box>

@@ -1,13 +1,24 @@
 const Workout = require("../models/Workout");
 
+// ✅ Create a new workout (including blocks)
 exports.createWorkout = async (req, res) => {
   try {
+    const {
+      coachId,
+      runnerId,
+      title,
+      date,
+      distance,
+      blocks, // ✅ now destructured
+    } = req.body;
+
     const newWorkout = new Workout({
-      coachId: req.body.coachId,
-      runnerId: req.body.runnerId,
-      title: req.body.title,
-      date: req.body.date,
-      distance: req.body.distance,
+      coachId,
+      runnerId,
+      title,
+      date,
+      distance,
+      blocks, // ✅ ensure it's passed correctly
     });
 
     await newWorkout.save();
@@ -17,6 +28,8 @@ exports.createWorkout = async (req, res) => {
     res.status(500).json({ message: "Failed to save workout" });
   }
 };
+
+// ✅ Get all workouts for a runner (includes blocks)
 exports.getRunnerWorkouts = async (req, res) => {
   try {
     const workouts = await Workout.find({ runnerId: req.params.id });
@@ -27,6 +40,7 @@ exports.getRunnerWorkouts = async (req, res) => {
   }
 };
 
+// ✅ PATCH: Update only the date of a workout
 exports.updateWorkoutDate = async (req, res) => {
   try {
     const { id } = req.params;

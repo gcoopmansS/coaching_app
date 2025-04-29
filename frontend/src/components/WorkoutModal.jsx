@@ -17,7 +17,12 @@ import BlockEditor from "./BlockEditor";
 import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
 
-export default function WorkoutModal({ open, onClose, runnerId }) {
+export default function WorkoutModal({
+  open,
+  onClose,
+  runnerId,
+  workoutToEdit,
+}) {
   const coach = JSON.parse(localStorage.getItem("user"));
   const [savedWorkouts, setSavedWorkouts] = useState([]);
   const [selectedId, setSelectedId] = useState("");
@@ -41,38 +46,46 @@ export default function WorkoutModal({ open, onClose, runnerId }) {
   }, [coach?.id]);
 
   useEffect(() => {
-    if (open && blocks.length === 0 && !selectedId) {
-      setBlocks([
-        {
-          type: "warmup",
-          durationType: "distance",
-          duration: "1",
-          intensityType: "none",
-          intensity: "",
-          description: "",
-          editing: false,
-        },
-        {
-          type: "run",
-          durationType: "distance",
-          duration: "2",
-          intensityType: "pace",
-          intensity: "6:00",
-          description: "",
-          editing: false,
-        },
-        {
-          type: "cooldown",
-          durationType: "distance",
-          duration: "1",
-          intensityType: "none",
-          intensity: "",
-          description: "",
-          editing: false,
-        },
-      ]);
+    if (open) {
+      if (workoutToEdit) {
+        // Edit mode
+        setTitle(workoutToEdit.title || "");
+        setDate(workoutToEdit.date?.slice(0, 10) || "");
+        setBlocks(workoutToEdit.blocks || []);
+      } else if (blocks.length === 0 && !selectedId) {
+        // Fresh new workout
+        setBlocks([
+          {
+            type: "warmup",
+            durationType: "distance",
+            duration: "1",
+            intensityType: "none",
+            intensity: "",
+            description: "",
+            editing: false,
+          },
+          {
+            type: "run",
+            durationType: "distance",
+            duration: "2",
+            intensityType: "pace",
+            intensity: "6:00",
+            description: "",
+            editing: false,
+          },
+          {
+            type: "cooldown",
+            durationType: "distance",
+            duration: "1",
+            intensityType: "none",
+            intensity: "",
+            description: "",
+            editing: false,
+          },
+        ]);
+      }
     }
-  }, [open]);
+  }, [open, workoutToEdit]);
 
   const handleSelectSaved = (id) => {
     setSelectedId(id);
@@ -95,8 +108,14 @@ export default function WorkoutModal({ open, onClose, runnerId }) {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:3000/api/workouts", {
-        method: "POST",
+      const url = workoutToEdit
+        ? `http://localhost:3000/api/workouts/${workoutToEdit._id}`
+        : `http://localhost:3000/api/workouts`;
+
+      const method = workoutToEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -105,9 +124,9 @@ export default function WorkoutModal({ open, onClose, runnerId }) {
       });
 
       if (res.ok) {
-        onClose(true);
+        onClose(true); // tells parent to refresh workouts
       } else {
-        console.error("Failed to schedule workout");
+        console.error("Failed to save workout");
       }
     } catch (err) {
       console.error("Workout save error:", err);
