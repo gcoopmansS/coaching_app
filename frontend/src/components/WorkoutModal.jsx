@@ -10,6 +10,7 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Divider,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import GradientButton from "./GradientButton";
@@ -48,12 +49,14 @@ export default function WorkoutModal({
   useEffect(() => {
     if (open) {
       if (workoutToEdit) {
-        // Edit mode
         setTitle(workoutToEdit.title || "");
         setDate(workoutToEdit.date?.slice(0, 10) || "");
         setBlocks(workoutToEdit.blocks || []);
-      } else if (blocks.length === 0 && !selectedId) {
-        // Fresh new workout
+        setSelectedId("");
+      } else {
+        setTitle("");
+        setDate("");
+        setSelectedId("");
         setBlocks([
           {
             type: "warmup",
@@ -124,13 +127,59 @@ export default function WorkoutModal({
       });
 
       if (res.ok) {
-        onClose(true); // tells parent to refresh workouts
+        onClose(true); // refresh workouts
       } else {
         console.error("Failed to save workout");
       }
     } catch (err) {
       console.error("Workout save error:", err);
     }
+  };
+
+  const addRunBlock = () => {
+    setBlocks((prev) => [
+      ...prev,
+      {
+        type: "run",
+        durationType: "distance",
+        duration: "",
+        intensityType: "none",
+        intensity: "",
+        description: "",
+        editing: true,
+      },
+    ]);
+  };
+
+  const addRepeatBlock = () => {
+    setBlocks((prev) => [
+      ...prev,
+      {
+        type: "repeat",
+        repeat: "2",
+        blocks: [
+          {
+            type: "run",
+            durationType: "distance",
+            duration: "1",
+            intensityType: "pace",
+            intensity: "6:00",
+            description: "",
+            editing: false,
+          },
+          {
+            type: "rest",
+            durationType: "time",
+            duration: "1",
+            intensityType: "none",
+            intensity: "",
+            description: "",
+            editing: false,
+          },
+        ],
+        editing: true,
+      },
+    ]);
   };
 
   return (
@@ -142,88 +191,87 @@ export default function WorkoutModal({
           alignItems: "center",
         }}
       >
-        Schedule Workout
+        {workoutToEdit ? "Edit Workout" : "Schedule Workout"}
         <IconButton onClick={() => onClose(false)} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
-        <Box
-          sx={{
-            fontSize: "0.9rem", // 👈 Slightly smaller text
-            "& .MuiTextField-root": {
-              // 👈 TextFields more compact
-              mb: 1.5,
-              "& .MuiInputBase-root": {
-                fontSize: "0.9rem",
-                padding: "8px 10px",
-              },
-              "& .MuiInputLabel-root": {
-                fontSize: "0.8rem",
-              },
-            },
-            "& .MuiTypography-root": {
-              fontSize: "0.9rem",
-            },
-          }}
-        >
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Start from saved workout</InputLabel>
-              <Select
-                value={selectedId}
-                onChange={(e) => handleSelectSaved(e.target.value)}
-                label="Start from saved workout"
-              >
-                <MenuItem value="">None</MenuItem>
-                {savedWorkouts.map((w) => (
-                  <MenuItem key={w._id} value={w._id}>
-                    {w.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
 
-            <TextField
-              fullWidth
-              size="small"
-              label="Workout Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+      <DialogContent sx={{ px: 3, py: 2 }}>
+        <Stack spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Start from saved workout</InputLabel>
+            <Select
+              value={selectedId}
+              onChange={(e) => handleSelectSaved(e.target.value)}
+              label="Start from saved workout"
+            >
+              <MenuItem value="">None</MenuItem>
+              {savedWorkouts.map((w) => (
+                <MenuItem key={w._id} value={w._id}>
+                  {w.title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            size="small"
+            label="Workout Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <TextField
+            fullWidth
+            size="small"
+            type="date"
+            label="Date"
+            InputLabelProps={{ shrink: true }}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+
+          <Divider sx={{ my: 1.5 }} />
+          <Typography variant="h6">Workout Builder</Typography>
+
+          {blocks.map((block, i) => (
+            <BlockEditor
+              key={i}
+              block={block}
+              onChange={(updated) => {
+                const newBlocks = [...blocks];
+                newBlocks[i] = updated;
+                setBlocks(newBlocks);
+              }}
+              onDelete={() => {
+                const newBlocks = [...blocks];
+                newBlocks.splice(i, 1);
+                setBlocks(newBlocks);
+              }}
             />
+          ))}
 
-            <TextField
-              fullWidth
+          <Stack direction="row" spacing={2}>
+            <GradientButton size="small" onClick={addRunBlock}>
+              Add Block
+            </GradientButton>
+            <GradientButton
               size="small"
-              type="date"
-              label="Date"
-              InputLabelProps={{ shrink: true }}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-
-            {blocks.map((block, i) => (
-              <BlockEditor
-                key={i}
-                block={block}
-                onChange={(updated) => {
-                  const newBlocks = [...blocks];
-                  newBlocks[i] = updated;
-                  setBlocks(newBlocks);
-                }}
-                onDelete={() => {
-                  const newBlocks = [...blocks];
-                  newBlocks.splice(i, 1);
-                  setBlocks(newBlocks);
-                }}
-              />
-            ))}
-
-            <GradientButton color="primary" onClick={handleSave}>
-              💾 Schedule Workout
+              onClick={addRepeatBlock}
+              color="secondary"
+            >
+              Add Repeat
             </GradientButton>
           </Stack>
-        </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <GradientButton color="primary" onClick={handleSave}>
+            {workoutToEdit ? "Save Changes" : "Schedule Workout"}
+          </GradientButton>
+        </Stack>
       </DialogContent>
     </Dialog>
   );

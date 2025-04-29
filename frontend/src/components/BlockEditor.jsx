@@ -13,16 +13,15 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import GradientButton from "./GradientButton";
 
-const blockTypes = ["warmup", "run", "rest", "cooldown", "loop"];
 const durationTypes = ["time", "distance"];
 const intensityTypes = ["none", "pace", "heartRate", "speed"];
 
 const blockColors = {
-  warmup: "#e53935", // red
-  run: "#1e88e5", // blue
-  rest: "#9e9e9e", // grey
-  cooldown: "#43a047", // green
-  loop: "#6d4c41", // brown
+  warmup: "#e53935",
+  run: "#1e88e5",
+  rest: "#9e9e9e",
+  cooldown: "#43a047",
+  repeat: "#6d4c41",
 };
 
 export default function BlockEditor({ block = {}, onChange, onDelete }) {
@@ -45,9 +44,11 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
     const newBlock = {
       type: "run",
       durationType: "distance",
-      duration: "",
-      intensityType: "none",
-      intensity: "",
+      duration: "1",
+      intensityType: "pace",
+      intensity: "6:00",
+      description: "",
+      editing: false,
     };
     update("blocks", [...(block.blocks || []), newBlock]);
   };
@@ -65,72 +66,107 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
       sx={{
         p: 1.5,
         borderRadius: 1,
-        mb: 1.5,
+        mb: 2,
         borderLeft: `6px solid ${color}`,
         background: "#f9f9f9",
         fontSize: "0.9rem",
       }}
     >
-      {editing ? (
-        <Stack spacing={1.5}>
-          <Stack direction="row" justifyContent="space-between">
-            <Typography variant="subtitle1">
-              {block.type ? block.type.toUpperCase() : "BLOCK"}
-            </Typography>
-            <IconButton onClick={onDelete}>
-              <DeleteIcon />
+      {/* Header: always show Edit and Delete icons */}
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="subtitle1" fontWeight="bold">
+          {block.type?.charAt(0).toUpperCase() + block.type.slice(1)}
+        </Typography>
+
+        {!editing && (
+          <Stack direction="row" spacing={1}>
+            <IconButton size="small" onClick={toggleEdit}>
+              <EditIcon fontSize="small" />
             </IconButton>
+            {onDelete && (
+              <IconButton size="small" onClick={onDelete}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
           </Stack>
+        )}
+      </Stack>
 
-          <TextField
-            select
-            label="Type"
-            value={block.type || ""}
-            onChange={(e) => update("type", e.target.value)}
-          >
-            {blockTypes.map((t) => (
-              <MenuItem key={t} value={t}>
-                {t}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {block.type === "loop" && (
+      {/* Body */}
+      {editing ? (
+        <>
+          {block.type === "repeat" ? (
             <>
-              <TextField
-                label="Repeat"
-                type="number"
-                value={block.repeat || ""}
-                onChange={(e) => update("repeat", e.target.value)}
-              />
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle2">Nested Blocks</Typography>
-
-              {(block.blocks || []).map((b, i) => (
-                <BlockEditor
-                  key={i}
-                  block={b}
-                  onChange={(updated) => handleNestedChange(i, updated)}
-                  onDelete={() => deleteNestedBlock(i)}
-                />
-              ))}
-
-              <GradientButton
-                onClick={addNestedBlock}
-                size="small"
-                color="secondary"
+              {/* Repeat Block Editing */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{ mt: 2 }}
               >
-                ➕ Add Inner Block
-              </GradientButton>
-            </>
-          )}
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Repeat
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  inputProps={{ min: 1 }}
+                  value={block.repeat || ""}
+                  onChange={(e) => update("repeat", e.target.value)}
+                  sx={{ width: 80 }}
+                />
+                <Typography variant="body1">times</Typography>
+              </Stack>
 
-          {block.type !== "loop" && (
+              <Stack
+                spacing={2}
+                sx={{ pl: 2, borderLeft: "4px solid #ccc", mt: 2 }}
+              >
+                {(block.blocks || []).map((b, i) => (
+                  <BlockEditor
+                    key={i}
+                    block={b}
+                    onChange={(updated) => handleNestedChange(i, updated)}
+                    onDelete={() => deleteNestedBlock(i)}
+                  />
+                ))}
+              </Stack>
+
+              <Box sx={{ mt: 2 }}>
+                <GradientButton
+                  onClick={addNestedBlock}
+                  size="small"
+                  color="secondary"
+                  variant="outlined"
+                >
+                  Add Block to Repeat
+                </GradientButton>
+              </Box>
+            </>
+          ) : (
             <>
+              {/* Normal Block Editing */}
+              {/* Only show Type field if NOT repeat */}
+              <TextField
+                select
+                label="Type"
+                value={block.type || ""}
+                onChange={(e) => update("type", e.target.value)}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                <MenuItem value="warmup">Warm-up</MenuItem>
+                <MenuItem value="run">Run</MenuItem>
+                <MenuItem value="rest">Rest</MenuItem>
+                <MenuItem value="cooldown">Cooldown</MenuItem>
+              </TextField>
+
               <TextField
                 label="Description"
                 value={block.description || ""}
                 onChange={(e) => update("description", e.target.value)}
+                fullWidth
+                sx={{ mt: 2 }}
               />
 
               <TextField
@@ -138,6 +174,8 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 label="Duration Type"
                 value={block.durationType || "distance"}
                 onChange={(e) => update("durationType", e.target.value)}
+                fullWidth
+                sx={{ mt: 2 }}
               >
                 {durationTypes.map((d) => (
                   <MenuItem key={d} value={d}>
@@ -154,6 +192,8 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 }
                 value={block.duration || ""}
                 onChange={(e) => update("duration", e.target.value)}
+                fullWidth
+                sx={{ mt: 2 }}
               />
 
               <TextField
@@ -161,6 +201,8 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 label="Intensity Type"
                 value={block.intensityType || "none"}
                 onChange={(e) => update("intensityType", e.target.value)}
+                fullWidth
+                sx={{ mt: 2 }}
               >
                 {intensityTypes.map((i) => (
                   <MenuItem key={i} value={i}>
@@ -174,6 +216,8 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                   label="Intensity"
                   value={block.intensity || ""}
                   onChange={(e) => update("intensity", e.target.value)}
+                  fullWidth
+                  sx={{ mt: 2 }}
                 />
               )}
             </>
@@ -184,59 +228,56 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
               onClick={toggleEdit}
               size="small"
               startIcon={<CheckIcon />}
-              sx={{ borderRadius: "20px", px: 2, py: 0.5 }}
+              sx={{ borderRadius: "20px", px: 2 }}
             >
-              Done
+              OK
             </GradientButton>
           </Box>
-        </Stack>
+        </>
       ) : (
-        <Box>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="subtitle1" fontWeight="bold">
-              {block.type
-                ? block.type.charAt(0).toUpperCase() + block.type.slice(1)
-                : "Block"}
-            </Typography>
-            <IconButton onClick={toggleEdit}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Stack>
-
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            {block.description && (
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {block.description}
+        <Box sx={{ mt: 2 }}>
+          {/* View Mode */}
+          {block.type !== "repeat" ? (
+            <>
+              {block.description && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  {block.description}
+                </Typography>
+              )}
+              <Stack direction="row" justifyContent="space-between">
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Total Duration / Distance
+                  </Typography>
+                  <Typography>
+                    {block.duration || "-"}{" "}
+                    {block.durationType === "distance" ? "km" : "min"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    Intensity
+                  </Typography>
+                  <Typography>
+                    {block.intensityType === "none"
+                      ? "-"
+                      : block.intensity || "-"}
+                  </Typography>
+                </Box>
+              </Stack>
+            </>
+          ) : (
+            <>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                Repeats: {block.repeat || "-"}x ({block.blocks?.length || 0}{" "}
+                steps inside)
               </Typography>
-            )}
-          </Typography>
-
-          <Divider sx={{ my: 1 }} />
-
-          <Stack direction="row" justifyContent="space-between">
-            <Box>
-              <Typography variant="caption" color="textSecondary">
-                Total Distance / Duration
-              </Typography>
-              <Typography>
-                {block.duration || "-"}{" "}
-                {block.durationType === "distance" ? "km" : "min"}
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography variant="caption" color="textSecondary">
-                Intensity
-              </Typography>
-              <Typography>
-                {block.intensityType === "none" ? "-" : block.intensity || "-"}
-              </Typography>
-            </Box>
-          </Stack>
+            </>
+          )}
         </Box>
       )}
     </Box>
