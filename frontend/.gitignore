@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+#gitignote
+.env
+.env.production
+.env.production
