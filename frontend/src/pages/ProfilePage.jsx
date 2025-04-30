@@ -58,7 +58,7 @@ export default function Profile() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${API_URL}/profile`, {
+      const res = await fetch(`${API_URL}/api/profile`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

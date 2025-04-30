@@ -24,7 +24,7 @@ export default function CoachRequestsPage() {
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       if (parsedUser?.id) {
-        fetch(`${API_URL}/connections/coach/${parsedUser.id}`, {
+        fetch(`${API_URL}/api/connections/coach/${parsedUser.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -39,7 +39,7 @@ export default function CoachRequestsPage() {
   const respondToRequest = async (id, status) => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${API_URL}/connections/${id}/status`, {
+    const res = await fetch(`${API_URL}/api/connections/${id}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +64,6 @@ export default function CoachRequestsPage() {
 
   return (
     <>
-      <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Coaching Requests

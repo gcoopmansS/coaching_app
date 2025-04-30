@@ -27,7 +27,7 @@ export default function CoachProfileModal({ coach, open, onClose }) {
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-          `${API_URL}/connections/check/${runner.id}/${coach._id}`,
+          `${API_URL}/api/connections/check/${runner.id}/${coach._id}`,
           {
             method: "GET",
             headers: {
@@ -50,7 +50,7 @@ export default function CoachProfileModal({ coach, open, onClose }) {
   const handleRequest = async () => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${API_URL}/connections`, {
+    const res = await fetch(`${API_URL}/api/connections`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

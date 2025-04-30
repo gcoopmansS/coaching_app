@@ -26,7 +26,7 @@ export default function CoachDashboard() {
       return;
     }
 
-    fetch(`${API_URL}/connections/coach/${user.id}`, {
+    fetch(`${API_URL}/api/connections/coach/${user.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

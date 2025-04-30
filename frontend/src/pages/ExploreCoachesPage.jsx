@@ -19,7 +19,7 @@ export default function ExploreCoachesPage() {
   const [selectedCoach, setSelectedCoach] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/users/coaches`)
+    fetch(`${API_URL}/api/users/coaches`)
       .then((res) => res.json())
       .then(setCoaches)
       .catch((err) => console.error("Error fetching coaches:", err));

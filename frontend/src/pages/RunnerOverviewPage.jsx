@@ -34,7 +34,7 @@ export default function RunnerOverviewPage() {
 
   const fetchWorkouts = useCallback(() => {
     const token = localStorage.getItem("token");
-    fetch(`${API_URL}/workouts/runner/${runnerId}`, {
+    fetch(`${API_URL}/api/workouts/runner/${runnerId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -44,7 +44,7 @@ export default function RunnerOverviewPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${API_URL}/users/${runnerId}`, {
+    fetch(`${API_URL}/api/users/${runnerId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

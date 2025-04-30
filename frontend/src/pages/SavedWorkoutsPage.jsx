@@ -24,7 +24,7 @@ export default function SavedWorkoutsPage() {
 
     const token = localStorage.getItem("token");
 
-    fetch(`${API_URL}/saved-workouts/${user.id}`, {
+    fetch(`${API_URL}/api/saved-workouts/${user.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -41,7 +41,7 @@ export default function SavedWorkoutsPage() {
     try {
       const token = localStorage.getItem("token");
 
-      await fetch(`${API_URL}/saved-workouts/${id}`, {
+      await fetch(`${API_URL}/api/saved-workouts/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

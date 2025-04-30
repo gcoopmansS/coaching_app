@@ -27,7 +27,7 @@ export default function Notifications({ user }) {
       return;
     }
 
-    fetch(`${API_URL}/users/${user.id}/notifications`, {
+    fetch(`${API_URL}/api/users/${user.id}/notifications`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -57,7 +57,7 @@ export default function Notifications({ user }) {
     }
 
     // Mark notifications as seen
-    fetch(`${API_URL}/users/${userId}/notifications/mark-seen`, {
+    fetch(`${API_URL}/api/users/${userId}/notifications/mark-seen`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,

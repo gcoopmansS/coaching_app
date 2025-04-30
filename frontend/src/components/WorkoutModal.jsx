@@ -36,7 +36,7 @@ export default function WorkoutModal({
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (coach?.id) {
-      fetch(`${API_URL}/saved-workouts/${coach.id}`, {
+      fetch(`${API_URL}/api/saved-workouts/${coach.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -103,8 +103,8 @@ export default function WorkoutModal({
 
     try {
       const url = workoutToEdit
-        ? `${API_URL}/workouts/${workoutToEdit._id}`
-        : `${API_URL}/workouts`;
+        ? `${API_URL}/api/workouts/${workoutToEdit._id}`
+        : `${API_URL}/api/workouts`;
       const method = workoutToEdit ? "PATCH" : "POST";
 
       const res = await fetch(url, {
