@@ -24,7 +24,12 @@ const blockColors = {
   repeat: "#6d4c41",
 };
 
-export default function BlockEditor({ block = {}, onChange, onDelete }) {
+export default function BlockEditor({
+  block = {},
+  onChange,
+  onDelete,
+  nested = false,
+}) {
   const [editing, setEditing] = useState(block.editing ?? false);
 
   const update = (field, value) => {
@@ -68,7 +73,7 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
         borderRadius: 1,
         mb: 2,
         borderLeft: `6px solid ${color}`,
-        background: "#f9f9f9",
+        backgroundColor: nested ? "#fff" : "#f9f9f9", // 👈 change here
         fontSize: "0.9rem",
       }}
     >
@@ -118,16 +123,14 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 <Typography variant="body1">times</Typography>
               </Stack>
 
-              <Stack
-                spacing={2}
-                sx={{ pl: 2, borderLeft: "4px solid #ccc", mt: 2 }}
-              >
+              <Stack spacing={2} sx={{ pl: 2, mt: 2 }}>
                 {(block.blocks || []).map((b, i) => (
                   <BlockEditor
                     key={i}
                     block={b}
                     onChange={(updated) => handleNestedChange(i, updated)}
                     onDelete={() => deleteNestedBlock(i)}
+                    nested={true}
                   />
                 ))}
               </Stack>
@@ -276,6 +279,18 @@ export default function BlockEditor({ block = {}, onChange, onDelete }) {
                 Repeats: {block.repeat || "-"}x ({block.blocks?.length || 0}{" "}
                 steps inside)
               </Typography>
+
+              <Stack spacing={1} sx={{ pl: 2, mt: 1 }}>
+                {(block.blocks || []).map((b, i) => (
+                  <BlockEditor
+                    key={i}
+                    block={b}
+                    onChange={(updated) => handleNestedChange(i, updated)}
+                    onDelete={() => deleteNestedBlock(i)}
+                    nested
+                  />
+                ))}
+              </Stack>
             </>
           )}
         </Box>
