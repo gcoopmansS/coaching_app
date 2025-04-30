@@ -17,6 +17,9 @@ import GradientButton from "./GradientButton";
 import BlockEditor from "./BlockEditor";
 import CloseIcon from "@mui/icons-material/Close";
 
+// ✅ Load backend URL from Vite env
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function WorkoutModal({
   open,
   onClose,
@@ -30,11 +33,10 @@ export default function WorkoutModal({
   const [date, setDate] = useState("");
   const [blocks, setBlocks] = useState([]);
 
-  // Load saved workouts
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (coach?.id) {
-      fetch(`http://localhost:3000/api/saved-workouts/${coach.id}`, {
+      fetch(`${API_URL}/saved-workouts/${coach.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -43,7 +45,6 @@ export default function WorkoutModal({
     }
   }, [coach?.id]);
 
-  // Handle open/edit
   useEffect(() => {
     if (workoutToEdit) {
       setTitle(workoutToEdit.title || "");
@@ -102,9 +103,8 @@ export default function WorkoutModal({
 
     try {
       const url = workoutToEdit
-        ? `http://localhost:3000/api/workouts/${workoutToEdit._id}`
-        : `http://localhost:3000/api/workouts`;
-
+        ? `${API_URL}/workouts/${workoutToEdit._id}`
+        : `${API_URL}/workouts`;
       const method = workoutToEdit ? "PATCH" : "POST";
 
       const res = await fetch(url, {

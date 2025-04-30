@@ -3,6 +3,8 @@ import { Box, TextField, Typography, Alert, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function LoginPage({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,21 +15,26 @@ export default function LoginPage({ setUser }) {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("http://localhost:3000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setUser(data.user);
-      navigate(data.user.role === "runner" ? "/runner" : "/coach");
-    } else {
-      setError(data.message);
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setUser(data.user);
+        navigate(data.user.role === "runner" ? "/runner" : "/coach");
+      } else {
+        setError(data.message || "Login failed.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Something went wrong. Please try again later.");
     }
   };
 

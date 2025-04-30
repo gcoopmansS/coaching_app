@@ -10,11 +10,14 @@ import { useState, useEffect } from "react";
 import { formatDate } from "../utils/formatDate";
 import GradientButton from "../components/GradientButton";
 
+// ✅ Use environment variable for base URL
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function CoachProfileModal({ coach, open, onClose }) {
   const runner = JSON.parse(localStorage.getItem("user"));
   const [form, setForm] = useState({ goal: "", distance: "", pace: "" });
   const [success, setSuccess] = useState("");
-  const [connectionStatus, setConnectionStatus] = useState("none"); // none | pending | accepted
+  const [connectionStatus, setConnectionStatus] = useState("none");
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -24,7 +27,7 @@ export default function CoachProfileModal({ coach, open, onClose }) {
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-          `http://localhost:3000/api/connections/check/${runner.id}/${coach._id}`,
+          `${API_URL}/connections/check/${runner.id}/${coach._id}`,
           {
             method: "GET",
             headers: {
@@ -35,11 +38,7 @@ export default function CoachProfileModal({ coach, open, onClose }) {
         );
         const data = await res.json();
 
-        if (data.exists) {
-          setConnectionStatus(data.status); // "pending" or "accepted"
-        } else {
-          setConnectionStatus("none");
-        }
+        setConnectionStatus(data.exists ? data.status : "none");
       } catch (err) {
         console.error("Error checking connection:", err);
       }
@@ -51,13 +50,11 @@ export default function CoachProfileModal({ coach, open, onClose }) {
   const handleRequest = async () => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch("http://localhost:3000/api/connections", {
+    const res = await fetch(`${API_URL}/connections`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         runnerId: runner.id,
@@ -68,11 +65,11 @@ export default function CoachProfileModal({ coach, open, onClose }) {
 
     const data = await res.json();
     if (res.ok) {
-      setSuccess("✅ Request sent!");
+      setSuccess("Request sent!");
       setForm({ goal: "", distance: "", pace: "" });
       setConnectionStatus("pending");
     } else {
-      setSuccess(data.message || "❌ Failed to send request");
+      setSuccess(data.message || "Failed to send request");
     }
   };
 
@@ -91,16 +88,16 @@ export default function CoachProfileModal({ coach, open, onClose }) {
           }}
         >
           <Avatar
-            src={`http://localhost:3000${coach.profilePicture || ""}`}
+            src={`${API_URL}${coach.profilePicture || ""}`}
             sx={{ width: 100, height: 100 }}
           />
           <Typography variant="h6">{coach.name}</Typography>
           <Typography variant="body2" color="text.secondary">
             {coach.email}
           </Typography>
-          <Typography variant="body2">📍 {coach.city}</Typography>
+          <Typography variant="body2">City: {coach.city}</Typography>
           <Typography variant="body2">
-            🎂 {formatDate(coach.dateOfBirth)}
+            DOB: {formatDate(coach.dateOfBirth)}
           </Typography>
           <Typography variant="body1" sx={{ mt: 2 }}>
             {coach.bio}
@@ -108,11 +105,11 @@ export default function CoachProfileModal({ coach, open, onClose }) {
 
           {connectionStatus === "accepted" ? (
             <Typography color="success.main" sx={{ mt: 2 }}>
-              🎉 You're already being coached by this coach!
+              You're already being coached by this coach!
             </Typography>
           ) : connectionStatus === "pending" ? (
             <Typography color="warning.main" sx={{ mt: 2 }}>
-              📨 Coaching request already sent!
+              Coaching request already sent!
             </Typography>
           ) : (
             <Box sx={{ width: "100%", mt: 3 }}>

@@ -10,6 +10,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function SignupPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -29,8 +31,9 @@ export default function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
-      const res = await fetch("http://localhost:3000/api/auth/signup", {
+      const res = await fetch(`${API_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -61,7 +64,7 @@ export default function SignupPage() {
       <Stack spacing={2}>
         {success && (
           <Alert severity="success">
-            ✅ Account created! Redirecting to login...
+            Account created! Redirecting to login...
           </Alert>
         )}
         {error && <Alert severity="error">{error}</Alert>}

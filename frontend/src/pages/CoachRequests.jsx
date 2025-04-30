@@ -11,20 +11,22 @@ import {
 import Navbar from "../components/Navbar";
 import GradientButton from "../components/GradientButton";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function CoachRequestsPage() {
   const [requests, setRequests] = useState([]);
   const [tab, setTab] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token"); // ⬅️ NEW
+    const token = localStorage.getItem("token");
 
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       if (parsedUser?.id) {
-        fetch(`http://localhost:3000/api/connections/coach/${parsedUser.id}`, {
+        fetch(`${API_URL}/connections/coach/${parsedUser.id}`, {
           headers: {
-            Authorization: `Bearer ${token}`, // ⬅️ NEW
+            Authorization: `Bearer ${token}`,
           },
         })
           .then((res) => res.json())
@@ -35,19 +37,16 @@ export default function CoachRequestsPage() {
   }, []);
 
   const respondToRequest = async (id, status) => {
-    const token = localStorage.getItem("token"); // ⬅️ NEW
+    const token = localStorage.getItem("token");
 
-    const res = await fetch(
-      `http://localhost:3000/api/connections/${id}/status`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ⬅️ NEW
-        },
-        body: JSON.stringify({ status }),
-      }
-    );
+    const res = await fetch(`${API_URL}/connections/${id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
 
     if (res.ok) {
       const updated = await res.json();
@@ -65,6 +64,7 @@ export default function CoachRequestsPage() {
 
   return (
     <>
+      <Navbar />
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
           Coaching Requests
@@ -80,9 +80,9 @@ export default function CoachRequestsPage() {
           filtered.pending.map((r) => (
             <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
               <Typography variant="h6">{r.runnerId.name}</Typography>
-              <Typography>🎯 Goal: {r.goal}</Typography>
-              <Typography>🏃 Distance: {r.distance} km</Typography>
-              <Typography>⏱️ Pace: {r.pace}</Typography>
+              <Typography>Goal: {r.goal}</Typography>
+              <Typography>Distance: {r.distance} km</Typography>
+              <Typography>Pace: {r.pace}</Typography>
 
               <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                 <GradientButton
@@ -107,10 +107,12 @@ export default function CoachRequestsPage() {
           filtered.accepted.map((r) => (
             <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
               <Typography variant="h6">{r.runnerId.name}</Typography>
-              <Typography>🎯 Goal: {r.goal}</Typography>
+              <Typography>Goal: {r.goal}</Typography>
               <Typography>Distance: {r.distance} km</Typography>
               <Typography>Pace: {r.pace}</Typography>
-              <Typography color="success.main">✅ Active Coaching</Typography>
+              <Typography color="success.main" fontWeight="bold">
+                Active Coaching
+              </Typography>
             </Paper>
           ))}
 
@@ -119,7 +121,9 @@ export default function CoachRequestsPage() {
             <Paper key={r._id} sx={{ p: 2, mb: 2 }}>
               <Typography variant="h6">{r.runnerId.name}</Typography>
               <Typography>Goal: {r.goal}</Typography>
-              <Typography color="error.main">❌ Rejected</Typography>
+              <Typography color="error.main" fontWeight="bold">
+                Rejected
+              </Typography>
             </Paper>
           ))}
       </Box>

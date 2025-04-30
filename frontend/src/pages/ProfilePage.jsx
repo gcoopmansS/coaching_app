@@ -3,14 +3,14 @@ import {
   Box,
   Typography,
   TextField,
-  Button,
   Avatar,
   Stack,
   Snackbar,
   Alert,
 } from "@mui/material";
-import Navbar from "../components/Navbar";
 import GradientButton from "../components/GradientButton";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Profile() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -23,7 +23,6 @@ export default function Profile() {
   });
 
   const [selectedFile, setSelectedFile] = useState(null);
-
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -37,8 +36,6 @@ export default function Profile() {
   const handleImageSelect = (e) => {
     if (e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
-
-      // Optional: preview immediately
       const previewUrl = URL.createObjectURL(e.target.files[0]);
       setUser({ ...user, profilePicture: previewUrl });
     }
@@ -61,7 +58,7 @@ export default function Profile() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:3000/api/profile", {
+      const res = await fetch(`${API_URL}/profile`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -74,15 +71,13 @@ export default function Profile() {
       if (res.ok) {
         const updatedUser = {
           ...data.user,
-          id: data.user._id, // Ensure `id` is always present
+          id: data.user._id,
         };
-
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
-
         setSnackbar({
           open: true,
-          message: "✅ Profile updated successfully!",
+          message: "Profile updated successfully!",
           severity: "success",
         });
       } else {
@@ -92,8 +87,8 @@ export default function Profile() {
           severity: "error",
         });
       }
-      // eslint-disable-next-line no-unused-vars
     } catch (err) {
+      console.error("Profile update error:", err);
       setSnackbar({
         open: true,
         message: "Server error",
@@ -129,7 +124,7 @@ export default function Profile() {
             <Avatar
               src={
                 user?.profilePicture?.startsWith("/uploads")
-                  ? `http://localhost:3000${user.profilePicture}`
+                  ? `${API_URL}${user.profilePicture}`
                   : user?.profilePicture
               }
               sx={{ width: 100, height: 100, mx: "auto", cursor: "pointer" }}
@@ -168,7 +163,7 @@ export default function Profile() {
             fullWidth
           />
 
-          <GradientButton onClick={handleSave}>💾 Save Profile</GradientButton>
+          <GradientButton onClick={handleSave}>Save Profile</GradientButton>
         </Stack>
       </Box>
 

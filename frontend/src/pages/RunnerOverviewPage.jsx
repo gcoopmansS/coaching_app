@@ -21,6 +21,8 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import BlockPreview from "../components/WorkoutPreviewBlock";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
   const [runner, setRunner] = useState(null);
@@ -32,10 +34,8 @@ export default function RunnerOverviewPage() {
 
   const fetchWorkouts = useCallback(() => {
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:3000/api/workouts/runner/${runnerId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    fetch(`${API_URL}/workouts/runner/${runnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then(setWorkouts)
@@ -44,7 +44,7 @@ export default function RunnerOverviewPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:3000/api/users/${runnerId}`, {
+    fetch(`${API_URL}/users/${runnerId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -102,7 +102,6 @@ export default function RunnerOverviewPage() {
         }}
       >
         {eventInfo.event.title}
-
         {!isMyWorkout && (
           <Tooltip title="Planned by other coach" arrow>
             <PersonIcon
@@ -138,7 +137,7 @@ export default function RunnerOverviewPage() {
     const workoutId = info.event.id;
     const newDate = info.event.startStr;
 
-    fetch(`http://localhost:3000/api/workouts/${workoutId}`, {
+    fetch(`${API_URL}/workouts/${workoutId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -166,7 +165,7 @@ export default function RunnerOverviewPage() {
       {runner && (
         <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center" }}>
           <Avatar
-            src={`http://localhost:3000${runner.profilePicture || ""}`}
+            src={`${API_URL}${runner.profilePicture || ""}`}
             sx={{ width: 64, height: 64, mr: 2 }}
           />
           <Box>

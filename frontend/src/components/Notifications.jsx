@@ -11,6 +11,9 @@ import {
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CircleIcon from "@mui/icons-material/Circle";
 
+// ✅ Load backend base URL from env
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Notifications({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -24,7 +27,7 @@ export default function Notifications({ user }) {
       return;
     }
 
-    fetch(`http://localhost:3000/api/users/${user.id}/notifications`, {
+    fetch(`${API_URL}/users/${user.id}/notifications`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -54,7 +57,7 @@ export default function Notifications({ user }) {
     }
 
     // Mark notifications as seen
-    fetch(`http://localhost:3000/api/users/${userId}/notifications/mark-seen`, {
+    fetch(`${API_URL}/users/${userId}/notifications/mark-seen`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -11,6 +11,8 @@ import {
 } from "@mui/material";
 import Navbar from "../components/Navbar";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const blockTypes = [
   { label: "Warm-up", value: "warmup" },
   { label: "Run", value: "run" },
@@ -30,7 +32,6 @@ export default function CoachingPage() {
   const [newBlock, setNewBlock] = useState({
     type: "run",
     description: "",
-    distance: "",
     durationType: "distance",
     duration: "",
     pace: "",
@@ -38,7 +39,13 @@ export default function CoachingPage() {
 
   const addBlock = () => {
     setBlocks([...blocks, newBlock]);
-    setNewBlock({ type: "run", description: "", distance: "", pace: "" });
+    setNewBlock({
+      type: "run",
+      description: "",
+      durationType: "distance",
+      duration: "",
+      pace: "",
+    });
   };
 
   const submitWorkout = async () => {
@@ -53,24 +60,29 @@ export default function CoachingPage() {
       blocks,
     };
 
-    const res = await fetch("http://localhost:3000/api/workouts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(workout),
-    });
+    try {
+      const res = await fetch(`${API_URL}/workouts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(workout),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      alert("✅ Workout saved!");
-      setTitle("");
-      setNotes("");
-      setDate("");
-      setBlocks([]);
-    } else {
-      alert("❌ Failed to save workout: " + data.message);
+      const data = await res.json();
+      if (res.ok) {
+        alert("Workout saved!");
+        setTitle("");
+        setNotes("");
+        setDate("");
+        setBlocks([]);
+      } else {
+        alert("Failed to save workout: " + data.message);
+      }
+    } catch (err) {
+      console.error("Workout save error:", err);
+      alert("Error saving workout");
     }
   };
 
@@ -137,29 +149,20 @@ export default function CoachingPage() {
                 <MenuItem value="time">Time</MenuItem>
               </TextField>
 
-              {newBlock.durationType === "distance" ? (
-                <TextField
-                  label="Distance (km)"
-                  type="number"
-                  inputProps={{ step: 0.1, min: 0 }}
-                  value={newBlock.distance || ""}
-                  onChange={(e) =>
-                    setNewBlock({ ...newBlock, distance: e.target.value })
-                  }
-                  sx={{ flex: 1 }}
-                />
-              ) : (
-                <TextField
-                  label="Time (min)"
-                  type="number"
-                  inputProps={{ step: 1, min: 0 }}
-                  value={newBlock.duration || ""}
-                  onChange={(e) =>
-                    setNewBlock({ ...newBlock, duration: e.target.value })
-                  }
-                  sx={{ flex: 1 }}
-                />
-              )}
+              <TextField
+                label={
+                  newBlock.durationType === "distance"
+                    ? "Distance (km)"
+                    : "Time (min)"
+                }
+                type="number"
+                inputProps={{ step: 0.1, min: 0 }}
+                value={newBlock.duration || ""}
+                onChange={(e) =>
+                  setNewBlock({ ...newBlock, duration: e.target.value })
+                }
+                sx={{ flex: 1 }}
+              />
             </Stack>
 
             <TextField
@@ -185,7 +188,7 @@ export default function CoachingPage() {
             />
 
             <Button onClick={addBlock} variant="contained" sx={{ mt: 2 }}>
-              ➕ Add Step
+              Add Step
             </Button>
           </Paper>
 
@@ -197,20 +200,18 @@ export default function CoachingPage() {
                   <Typography>
                     <strong>{b.type.toUpperCase()}</strong>
                   </Typography>
-                  {b.durationType === "distance" ? (
-                    <Typography>📏 {b.distance} km</Typography>
-                  ) : (
-                    <Typography>⏱ {b.duration} min</Typography>
-                  )}
-                  {b.pace && <Typography>🏃 Pace: {b.pace}</Typography>}
-                  {b.description && <Typography>📝 {b.description}</Typography>}
+                  <Typography>
+                    {b.duration} {b.durationType === "distance" ? "km" : "min"}
+                  </Typography>
+                  {b.pace && <Typography>Pace: {b.pace}</Typography>}
+                  {b.description && <Typography>{b.description}</Typography>}
                 </Paper>
               ))}
             </Box>
           )}
 
           <Button onClick={submitWorkout} variant="contained" color="primary">
-            ✅ Save Workout
+            Save Workout
           </Button>
         </Stack>
       </Box>

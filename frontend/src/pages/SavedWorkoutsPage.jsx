@@ -12,6 +12,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function SavedWorkoutsPage() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [workouts, setWorkouts] = useState([]);
@@ -22,7 +24,7 @@ export default function SavedWorkoutsPage() {
 
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:3000/api/saved-workouts/${user.id}`, {
+    fetch(`${API_URL}/saved-workouts/${user.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -30,7 +32,7 @@ export default function SavedWorkoutsPage() {
       .then((res) => res.json())
       .then((data) => setWorkouts(data))
       .catch((err) => console.error("Error loading saved workouts:", err));
-  }, []);
+  }, [user]);
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm("Delete this workout?");
@@ -39,12 +41,13 @@ export default function SavedWorkoutsPage() {
     try {
       const token = localStorage.getItem("token");
 
-      await fetch(`http://localhost:3000/api/saved-workouts/${id}`, {
+      await fetch(`${API_URL}/saved-workouts/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       setWorkouts((prev) => prev.filter((w) => w._id !== id));
     } catch (err) {
       console.error("Delete error:", err);
@@ -52,14 +55,14 @@ export default function SavedWorkoutsPage() {
   };
 
   const handleView = (workout) => {
-    // You can enhance this later to open a preview modal
-    console.log("Viewing workout:", workout);
+    console.log("View workout:", workout);
+    // Future: open modal or navigate to detail view
   };
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        📚 Saved Workouts
+        Saved Workouts
       </Typography>
 
       {workouts.length === 0 ? (
@@ -73,9 +76,12 @@ export default function SavedWorkoutsPage() {
                   <Typography variant="h6" gutterBottom>
                     {workout.title}
                   </Typography>
-
                   <Box
-                    sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: 1,
+                    }}
                   >
                     <IconButton onClick={() => handleView(workout)}>
                       <VisibilityIcon />

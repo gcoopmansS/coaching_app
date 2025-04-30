@@ -12,10 +12,13 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Notifications from "./Notifications";
 
+// ✅ Load backend base URL from env
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Navbar({ user: propUser, setUser }) {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [user, setLocalUser] = useState(null); // avoid stale propUser
+  const [user, setLocalUser] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -39,6 +42,7 @@ export default function Navbar({ user: propUser, setUser }) {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     if (setUser) setUser(null);
     navigate("/login");
   };
@@ -78,15 +82,13 @@ export default function Navbar({ user: propUser, setUser }) {
               },
             }}
           >
-            {" "}
             <Avatar
               alt={user.name}
-              src={`http://localhost:3000${user.profilePicture || ""}`}
+              src={`${API_URL}${user.profilePicture || ""}`}
               sx={{ width: 36, height: 36 }}
             />
           </IconButton>
 
-          {/* ✅ Don't render Menu unless anchorEl is set */}
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
