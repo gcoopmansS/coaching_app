@@ -12,9 +12,9 @@ import GradientButton from "../components/GradientButton";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Profile() {
+export default function Profile({ setUser }) {
   const storedUser = JSON.parse(localStorage.getItem("user"));
-  const [user, setUser] = useState(storedUser);
+  const [user, setLocalUser] = useState(storedUser);
 
   const [form, setForm] = useState({
     city: user?.city || "",
@@ -37,7 +37,7 @@ export default function Profile() {
     if (e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
       const previewUrl = URL.createObjectURL(e.target.files[0]);
-      setUser({ ...user, profilePicture: previewUrl });
+      setLocalUser({ ...user, profilePicture: previewUrl });
     }
   };
 
@@ -73,11 +73,14 @@ export default function Profile() {
           ...data.user,
           id: data.user._id,
         };
-        setUser(updatedUser);
+
+        setLocalUser(updatedUser);
+        setUser(updatedUser); // ✅ update global user for Navbar
         localStorage.setItem("user", JSON.stringify(updatedUser));
+
         setSnackbar({
           open: true,
-          message: "Profile updated successfully!",
+          message: "✅ Profile updated successfully!",
           severity: "success",
         });
       } else {

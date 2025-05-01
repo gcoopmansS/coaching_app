@@ -84,7 +84,11 @@ export default function Navbar({ user: propUser, setUser }) {
           >
             <Avatar
               alt={user.name}
-              src={`${API_URL}${user.profilePicture || ""}`}
+              src={
+                user?.profilePicture?.startsWith("/uploads")
+                  ? `${API_URL}${user.profilePicture}`
+                  : user?.profilePicture
+              }
               sx={{ width: 36, height: 36 }}
             />
           </IconButton>
