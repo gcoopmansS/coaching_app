@@ -2,14 +2,22 @@ import { Box, Tooltip, Typography } from "@mui/material";
 import { getBlockDistance } from "../utils/workoutMetrics";
 
 const blockColors = {
-  warmup: "#f44336",
-  run: "#2196f3",
-  rest: "#9e9e9e",
-  cooldown: "#4caf50",
-  repeat: "#795548",
+  warmup: "#EF9A9A",
+  run: "#64B5F6",
+  rest: "#BDBDBD",
+  cooldown: "#81C784",
+  repeat: "#A1887F",
 };
 
 export default function MiniBlockBar({ blocks = [], height = 22 }) {
+  const blockHeights = {
+    run: height,
+    warmup: height * 0.8,
+    cooldown: height * 0.8,
+    rest: height * 0.6,
+    repeat: height * 0.6,
+  };
+
   const expandedBlocks = [];
 
   for (const block of blocks) {
@@ -36,15 +44,16 @@ export default function MiniBlockBar({ blocks = [], height = 22 }) {
 
   return (
     <Box sx={{ width: "100%", mt: 2, mb: 1, pr: 2 }}>
-      {" "}
-      {/* right padding added here */}
-      <Box sx={{ display: "flex", position: "relative", height }}>
+      <Box
+        sx={{ display: "flex", position: "relative", alignItems: "flex-end" }}
+      >
         {expandedBlocks.map((block, i) => {
           const distance = getBlockDistance(block);
           const type = (block.type || "").toLowerCase();
           const color = blockColors[type] || "#ccc";
-          cumulativeDistance += distance;
+          const barHeight = blockHeights[type] || height;
 
+          cumulativeDistance += distance;
           const showLabel =
             cumulativeDistance - lastLabelDistance >= labelMinDelta;
           if (showLabel) lastLabelDistance = cumulativeDistance;
@@ -55,7 +64,7 @@ export default function MiniBlockBar({ blocks = [], height = 22 }) {
                 sx={{
                   flexGrow: distance,
                   flexBasis: 0,
-                  height: "100%",
+                  height: barHeight,
                   backgroundColor: color,
                   position: "relative",
                   borderRight:
@@ -68,8 +77,8 @@ export default function MiniBlockBar({ blocks = [], height = 22 }) {
                     variant="caption"
                     sx={{
                       position: "absolute",
-                      top: height + 6,
-                      right: i === expandedBlocks.length - 1 ? 8 : 0, // shift last label left
+                      top: barHeight + 6,
+                      right: i === expandedBlocks.length - 1 ? 8 : 0,
                       transform: "translateX(50%)",
                       fontSize: "0.72rem",
                       color: "#666",
