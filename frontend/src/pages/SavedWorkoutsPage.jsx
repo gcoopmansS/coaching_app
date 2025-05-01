@@ -15,7 +15,10 @@ import GradientButton from "../components/GradientButton";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function SavedWorkoutsPage() {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [user] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [workouts, setWorkouts] = useState([]);
   const navigate = useNavigate();
 
@@ -55,8 +58,8 @@ export default function SavedWorkoutsPage() {
   };
 
   const handleView = (workout) => {
-    console.log("View workout:", workout);
-    // Future: open modal or navigate to detail view
+    console.log("Viewing workout:", workout);
+    // You could open a preview modal here
   };
 
   return (
