@@ -51,7 +51,7 @@ function BlockPreview({ block, nested = false }) {
         mb: 2,
         borderLeft: `6px solid ${color}`,
         borderRadius: 2,
-        backgroundColor: nested ? "#fff" : "#fafafa", // 👈 highlight change here
+        backgroundColor: nested ? "#fff" : "#fafafa",
       }}
     >
       <Typography variant="h6" sx={{ mb: 0.5 }}>

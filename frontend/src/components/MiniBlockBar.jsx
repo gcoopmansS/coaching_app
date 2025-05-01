@@ -1,21 +1,18 @@
 import { Box, Tooltip } from "@mui/material";
+import { getBlockDistance } from "../utils/workoutMetrics";
 
 const blockColors = {
-  warmup: "#f44336",
-  run: "#2196f3",
-  rest: "#9e9e9e",
-  cooldown: "#4caf50",
-  repeat: "#795548",
+  warmup: "#f44336", // red
+  run: "#2196f3", // blue
+  rest: "#9e9e9e", // gray
+  cooldown: "#4caf50", // green
+  repeat: "#795548", // brown
 };
 
-const safeDuration = (val) => {
-  const num = typeof val === "number" ? val : parseFloat(val);
-  return isNaN(num) || num <= 0 ? 1 : num;
-};
-
-function MiniBlockBar({ blocks = [], height = 18 }) {
+export default function MiniBlockBar({ blocks = [], height = 18 }) {
   const expandedBlocks = [];
 
+  // Flatten repeat blocks
   for (const block of blocks) {
     if (block.type === "repeat" && Array.isArray(block.blocks)) {
       const repeatCount = block.repeat || 1;
@@ -45,21 +42,17 @@ function MiniBlockBar({ blocks = [], height = 18 }) {
       }}
     >
       {expandedBlocks.map((block, i) => {
-        const duration = safeDuration(block.duration);
+        const distance = getBlockDistance(block);
         const type = (block.type || "").toLowerCase();
         const color = blockColors[type] || "#ccc";
 
-        const label = `${type.toUpperCase()} • ${duration} ${
-          block.durationType === "distance" ? "km" : "min"
-        }${
-          block.intensity ? ` • ${block.intensityType}: ${block.intensity}` : ""
-        }`;
+        const label = `${type.toUpperCase()} • ${distance.toFixed(2)} km`;
 
         return (
           <Tooltip key={i} title={label} arrow>
             <Box
               sx={{
-                flexGrow: duration,
+                flexGrow: distance,
                 flexBasis: 0,
                 height,
                 backgroundColor: color,
@@ -73,5 +66,3 @@ function MiniBlockBar({ blocks = [], height = 18 }) {
     </Box>
   );
 }
-
-export default MiniBlockBar;

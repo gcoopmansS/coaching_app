@@ -17,6 +17,10 @@ import GradientButton from "../components/GradientButton";
 import WorkoutModal from "../components/WorkoutModal";
 import BlockPreview from "../components/WorkoutPreviewBlock";
 import WorkoutCalendar from "../components/WorkoutCalendar"; // <-- REQUIRED
+import {
+  getWorkoutTotalDistance,
+  getWorkoutTotalTime,
+} from "../utils/workoutMetrics";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -178,6 +182,18 @@ export default function RunnerOverviewPage() {
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
             {new Date(selectedWorkout?.date).toLocaleDateString()}
           </Typography>
+
+          {selectedWorkout?.blocks && (
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mb: 2 }}
+            >
+              Estimated:{" "}
+              {getWorkoutTotalDistance(selectedWorkout.blocks).toFixed(2)} km •{" "}
+              {Math.round(getWorkoutTotalTime(selectedWorkout.blocks))} min
+            </Typography>
+          )}
 
           <Stack spacing={2}>
             {selectedWorkout?.blocks?.map((block, i) => (
