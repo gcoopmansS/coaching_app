@@ -14,6 +14,15 @@ exports.updateProfile = async (req, res) => {
       new: true,
     });
 
+    const backendUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://coaching-backend-g565.onrender.com"
+        : "http://localhost:3000";
+
+    if (updatedUser?.profilePicture?.startsWith("/uploads")) {
+      updatedUser.profilePicture = `${backendUrl}${updatedUser.profilePicture}`;
+    }
+
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
