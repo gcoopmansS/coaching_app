@@ -137,7 +137,7 @@ export default function RunnerOverviewPage() {
     const workoutId = info.event.id;
     const newDate = info.event.startStr;
 
-    fetch(`${API_URL}/workouts/${workoutId}`, {
+    fetch(`${API_URL}/api/workouts/${workoutId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
