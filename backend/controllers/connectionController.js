@@ -29,6 +29,21 @@ exports.createConnection = async (req, res) => {
     });
 
     await newConnection.save();
+
+    // ✅ Create notification for the coach
+    const runner = await User.findById(runnerId);
+    const coachNotification = {
+      message: `${runner.name} has sent you a coaching request.`,
+      type: "info",
+      createdAt: new Date(),
+      seen: false,
+    };
+
+    await User.updateOne(
+      { _id: coachId },
+      { $push: { notifications: coachNotification } }
+    );
+
     res.status(201).json(newConnection);
   } catch (err) {
     console.error("Error creating connection:", err);
