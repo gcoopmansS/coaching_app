@@ -124,3 +124,16 @@ exports.checkConnection = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getRunnerConnections = async (req, res) => {
+  try {
+    const connections = await Connection.find({
+      runnerId: req.params.runnerId,
+      status: "accepted",
+    }).populate("coachId");
+    res.json(connections);
+  } catch (err) {
+    console.error("Failed to fetch runner connections:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

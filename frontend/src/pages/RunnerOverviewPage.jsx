@@ -13,13 +13,10 @@ import {
   Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import PersonIcon from "@mui/icons-material/Person";
 import GradientButton from "../components/GradientButton";
 import WorkoutModal from "../components/WorkoutModal";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
 import BlockPreview from "../components/WorkoutPreviewBlock";
+import WorkoutCalendar from "../components/WorkoutCalendar"; // <-- REQUIRED
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -63,61 +60,6 @@ export default function RunnerOverviewPage() {
       coachId: workout.coachId,
     },
   }));
-
-  const renderEventContent = (eventInfo) => {
-    const loggedInCoachId = JSON.parse(localStorage.getItem("user"))?.id;
-    const isMyWorkout =
-      eventInfo.event.extendedProps.coachId === loggedInCoachId;
-
-    return (
-      <Box
-        tabIndex={0}
-        sx={{
-          width: "100%",
-          backgroundColor: "#ffe3ec",
-          border: "1px solid #f48fb1",
-          borderRadius: 1,
-          padding: "4px",
-          paddingRight: isMyWorkout ? "4px" : "16px",
-          fontSize: "0.85rem",
-          textAlign: "left",
-          color: isMyWorkout ? "#ad1457" : "#777",
-          whiteSpace: "normal",
-          fontWeight: 500,
-          transition: "all 0.3s ease",
-          outline: "none",
-          "&:hover": {
-            backgroundColor: "#f8bbd0",
-            borderColor: "#f06292",
-            boxShadow: 3,
-            cursor: "pointer",
-          },
-          "&:focus": {
-            backgroundColor: "#ffe3ec",
-            borderColor: "#f48fb1",
-            boxShadow: "none",
-          },
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {eventInfo.event.title}
-        {!isMyWorkout && (
-          <Tooltip title="Planned by other coach" arrow>
-            <PersonIcon
-              sx={{
-                position: "absolute",
-                top: 4,
-                right: 4,
-                fontSize: "1rem",
-                color: "#999",
-              }}
-            />
-          </Tooltip>
-        )}
-      </Box>
-    );
-  };
 
   const handleEventClick = (info) => {
     const clickedWorkout = workouts.find((w) => w._id === info.event.id);
@@ -190,16 +132,12 @@ export default function RunnerOverviewPage() {
 
       <Paper sx={{ p: 2, mb: 3 }}>
         {workouts.length > 0 ? (
-          <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridWeek"
-            firstDay={1}
+          <WorkoutCalendar
             events={calendarEvents}
-            eventClick={handleEventClick}
-            eventContent={renderEventContent}
-            editable
-            eventDrop={handleEventDrop}
-            height="auto"
+            onEventClick={handleEventClick}
+            onEventDrop={handleEventDrop}
+            editable={true}
+            highlightCoachId={JSON.parse(localStorage.getItem("user"))?.id}
           />
         ) : (
           <Typography>No workouts scheduled yet.</Typography>

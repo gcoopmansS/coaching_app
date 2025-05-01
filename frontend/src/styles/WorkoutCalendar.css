@@ -1,0 +1,111 @@
+/* Base font and layout */
+.fc {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #333;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+/* Toolbar title */
+.fc .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+
+/* Navigation buttons */
+.fc .fc-button {
+  background: linear-gradient(to right, #f44336, #ff7043);
+  border: none;
+  color: white;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 4px 10px;
+  text-transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.fc .fc-button:hover {
+  background: linear-gradient(to right, #e53935, #f4511e);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: #d84315;
+}
+
+/* View switch button group (month/week) */
+.fc .fc-button-group .fc-button {
+  background-color: #eeeeee;
+  color: #333;
+}
+
+.fc .fc-button-group .fc-button.fc-button-active {
+  background: linear-gradient(to right, #f44336, #ff7043);
+  color: white;
+}
+
+/* Day headers */
+.fc .fc-col-header-cell {
+  background-color: #f4f6f8;
+  font-weight: 500;
+  padding: 6px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Day cells */
+.fc .fc-daygrid-day {
+  border: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.fc .fc-daygrid-day:hover {
+  background-color: #fff3e0;
+}
+
+/* Day numbers */
+.fc .fc-daygrid-day-number {
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+}
+
+/* Events */
+.fc-event-custom {
+  background-color: #f44336 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-size: 0.85rem !important;
+  font-weight: 500;
+  color: white !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.fc-event-custom:hover {
+  background-color: #d32f2f !important;
+}
+
+/* Highlight today */
+.fc .fc-day-today {
+  background-color: #fff8e1 !important;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+
+  .fc .fc-button {
+    font-size: 12px;
+    padding: 2px 6px;
+  }
+
+  .fc .fc-daygrid-day-number {
+    font-size: 0.75rem;
+  }
+}

@@ -11,6 +11,7 @@ const {
   updateConnectionStatus,
   getCoachConnections,
   checkConnection,
+  getRunnerConnections,
 } = require("../controllers/connectionController");
 const { protect } = require("../middlewares/authMiddleware");
 
@@ -156,4 +157,28 @@ router.get("/connections/coach/:coachId", protect, getCoachConnections);
  */
 
 router.get("/connections/check/:runnerId/:coachId", protect, checkConnection);
+
+/**
+ * @swagger
+ * /api/connections/runner/{runnerId}:
+ *   get:
+ *     summary: Get all coaching connections for a runner
+ *     tags: [Connections]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: runnerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Runner's user ID
+ *     responses:
+ *       200:
+ *         description: List of coaching connections
+ *       500:
+ *         description: Server error
+ */
+router.get("/connections/runner/:runnerId", protect, getRunnerConnections);
+
 module.exports = router;
