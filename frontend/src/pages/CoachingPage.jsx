@@ -61,7 +61,7 @@ export default function CoachingPage() {
     };
 
     try {
-      const res = await fetch(`${API_URL}/workouts`, {
+      const res = await fetch(`${API_URL}/api/workouts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

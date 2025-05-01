@@ -10,7 +10,6 @@ import { useState, useEffect } from "react";
 import { formatDate } from "../utils/formatDate";
 import GradientButton from "../components/GradientButton";
 
-// ✅ Use environment variable for base URL
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function CoachProfileModal({ coach, open, onClose }) {
@@ -20,16 +19,14 @@ export default function CoachProfileModal({ coach, open, onClose }) {
   const [connectionStatus, setConnectionStatus] = useState("none");
 
   useEffect(() => {
-    const checkConnection = async () => {
-      if (!coach || !runner) return;
+    if (!open || !coach?._id || !runner?.id) return;
 
+    const checkConnection = async () => {
       try {
         const token = localStorage.getItem("token");
-
         const res = await fetch(
           `${API_URL}/api/connections/check/${runner.id}/${coach._id}`,
           {
-            method: "GET",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
@@ -37,7 +34,6 @@ export default function CoachProfileModal({ coach, open, onClose }) {
           }
         );
         const data = await res.json();
-
         setConnectionStatus(data.exists ? data.status : "none");
       } catch (err) {
         console.error("Error checking connection:", err);
@@ -45,7 +41,7 @@ export default function CoachProfileModal({ coach, open, onClose }) {
     };
 
     checkConnection();
-  }, [coach, runner]);
+  }, [open, coach?._id, runner?.id]); // 👈 clean & minimal
 
   const handleRequest = async () => {
     const token = localStorage.getItem("token");
