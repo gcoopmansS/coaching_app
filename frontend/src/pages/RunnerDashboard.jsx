@@ -118,47 +118,76 @@ export default function RunnerDashboard() {
       </Box>
 
       {view === "list" ? (
-        <Stack spacing={2}>
-          {workouts
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
-            .map((w) => {
-              const coach = coaches.find((c) => c.coachId._id === w.coachId);
-              return (
-                <Paper key={w._id} sx={{ p: 2, position: "relative" }}>
-                  {/* Coach Avatar */}
-                  {coach && (
-                    <Avatar
-                      src={`${API_URL}${coach.coachId.profilePicture || ""}`}
-                      alt={coach.coachId.name}
+        <Box sx={{ pl: { xs: 0, sm: 10 } }}>
+          {" "}
+          {/* Reserved margin on left */}
+          <Stack spacing={4} sx={{ position: "relative" }}>
+            {workouts
+              .sort((a, b) => new Date(a.date) - new Date(b.date))
+              .map((w) => {
+                const coach = coaches.find((c) => c.coachId._id === w.coachId);
+                const workoutDate = new Date(w.date);
+
+                return (
+                  <Box key={w._id} sx={{ position: "relative" }}>
+                    {/* Date label outside frame but within margin */}
+                    <Box
                       sx={{
-                        width: 32,
-                        height: 32,
                         position: "absolute",
-                        top: 8,
-                        right: 8,
+                        left: -80,
+                        top: 24,
+                        textAlign: "right",
+                        pr: 2,
+                        width: 70,
+                        display: { xs: "none", sm: "block" },
                       }}
-                    />
-                  )}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                      >
+                        {workoutDate.toLocaleDateString(undefined, {
+                          weekday: "short",
+                        })}
+                      </Typography>
+                      <Typography variant="body2">
+                        {workoutDate.toLocaleDateString(undefined, {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </Typography>
+                    </Box>
 
-                  {/* Workout Info */}
-                  <Typography variant="h6">{w.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(w.date).toLocaleDateString(undefined, {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </Typography>
-
-                  {/* Blocks Preview */}
-                  <Box sx={{ mt: 1, width: "100%" }}>
-                    <MiniBlockBar blocks={w.blocks} />
+                    <Paper
+                      sx={{
+                        p: 2,
+                        pl: { xs: 2, sm: 5 },
+                        position: "relative",
+                      }}
+                    >
+                      {coach && (
+                        <Avatar
+                          src={`${API_URL}${
+                            coach.coachId.profilePicture || ""
+                          }`}
+                          alt={coach.coachId.name}
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                          }}
+                        />
+                      )}
+                      <Typography variant="h6">{w.title}</Typography>
+                      <MiniBlockBar blocks={w.blocks} />
+                    </Paper>
                   </Box>
-                </Paper>
-              );
-            })}
-        </Stack>
+                );
+              })}
+          </Stack>
+        </Box>
       ) : (
         <WorkoutCalendar events={calendarEvents} />
       )}
