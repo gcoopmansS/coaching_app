@@ -1,11 +1,12 @@
-/* Base font and layout */
+/* === WorkoutCalendar.css === */
+
+/* Base layout */
 .fc {
   font-family: "Inter", sans-serif;
   font-size: 14px;
-  color: #333;
-  border-radius: 8px;
-  overflow: hidden;
   background-color: #fff;
+  border-radius: 8px;
+  color: #1e1e1e;
 }
 
 /* Toolbar title */
@@ -17,84 +18,70 @@
 
 /* Navigation buttons */
 .fc .fc-button {
-  background: linear-gradient(to right, #f44336, #ff7043);
+  background: linear-gradient(
+    to right,
+    #64b5f6,
+    #81c784
+  ); /* theme.colors.primary → secondary */
   border: none;
   color: white;
   font-weight: 500;
   border-radius: 6px;
   padding: 4px 10px;
   text-transform: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .fc .fc-button:hover {
-  background: linear-gradient(to right, #e53935, #f4511e);
+  opacity: 0.9;
 }
 
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-  background: #d84315;
-}
-
-/* View switch button group (month/week) */
-.fc .fc-button-group .fc-button {
-  background-color: #eeeeee;
-  color: #333;
-}
-
+/* View toggle buttons */
 .fc .fc-button-group .fc-button.fc-button-active {
-  background: linear-gradient(to right, #f44336, #ff7043);
+  background: #64b5f6;
   color: white;
 }
 
-/* Day headers */
+/* Calendar cell hover */
+.fc .fc-daygrid-day:hover {
+  background-color: #f5f5f5;
+}
+
+/* Header cells */
 .fc .fc-col-header-cell {
   background-color: #f4f6f8;
-  font-weight: 500;
-  padding: 6px 0;
   border-bottom: 1px solid #e0e0e0;
-}
-
-/* Day cells */
-.fc .fc-daygrid-day {
-  border: 1px solid #f0f0f0;
-  transition: background-color 0.2s ease;
-}
-
-.fc .fc-daygrid-day:hover {
-  background-color: #fff3e0;
+  padding: 6px 0;
+  font-weight: 500;
 }
 
 /* Day numbers */
 .fc .fc-daygrid-day-number {
-  padding: 4px 6px;
-  font-size: 0.85rem;
   font-weight: 500;
   color: #555;
 }
 
-/* Events */
+/* Custom event styling */
 .fc-event-custom {
-  background-color: #f44336 !important;
-  border: none !important;
+  background-color: #64b5f6 !important; /* theme.colors.run */
+  color: white !important;
   border-radius: 6px !important;
   padding: 2px 6px !important;
   font-size: 0.85rem !important;
   font-weight: 500;
-  color: white !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Hover effect */
 .fc-event-custom:hover {
-  background-color: #d32f2f !important;
+  background-color: #42a5f5 !important; /* slightly darker run blue */
 }
 
-/* Highlight today */
+/* Today’s background */
 .fc .fc-day-today {
-  background-color: #fff8e1 !important;
+  background-color: #e3f2fd !important; /* light blue */
 }
 
-/* Responsive tweaks */
+/* Responsive */
 @media (max-width: 600px) {
   .fc .fc-toolbar-title {
     font-size: 1rem;

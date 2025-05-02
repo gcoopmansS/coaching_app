@@ -1,13 +1,6 @@
 import { Box, Tooltip, Typography } from "@mui/material";
 import { getBlockDistance } from "../utils/workoutMetrics";
-
-const blockColors = {
-  warmup: "#EF9A9A",
-  run: "#64B5F6",
-  rest: "#BDBDBD",
-  cooldown: "#81C784",
-  repeat: "#A1887F",
-};
+import theme from "../theme/theme";
 
 export default function MiniBlockBar({ blocks = [], height = 22 }) {
   const blockHeights = {
@@ -50,7 +43,7 @@ export default function MiniBlockBar({ blocks = [], height = 22 }) {
         {expandedBlocks.map((block, i) => {
           const distance = getBlockDistance(block);
           const type = (block.type || "").toLowerCase();
-          const color = blockColors[type] || "#ccc";
+          const color = theme.colors[type] || "#ccc";
           const barHeight = blockHeights[type] || height;
 
           cumulativeDistance += distance;
@@ -68,8 +61,10 @@ export default function MiniBlockBar({ blocks = [], height = 22 }) {
                   backgroundColor: color,
                   position: "relative",
                   borderRight:
-                    i < expandedBlocks.length - 1 ? "1px solid #eee" : "none",
-                  borderRadius: "2px",
+                    i < expandedBlocks.length - 1
+                      ? `1px solid ${theme.colors.divider}`
+                      : "none",
+                  borderRadius: theme.borderRadius.sm,
                 }}
               >
                 {showLabel && (
@@ -80,8 +75,7 @@ export default function MiniBlockBar({ blocks = [], height = 22 }) {
                       top: barHeight + 6,
                       right: i === expandedBlocks.length - 1 ? 8 : 0,
                       transform: "translateX(50%)",
-                      fontSize: "0.72rem",
-                      color: "#666",
+                      ...theme.typography.caption,
                       whiteSpace: "nowrap",
                     }}
                   >

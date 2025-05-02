@@ -2,17 +2,11 @@ import { Box, Stack, Typography, Paper } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
-
-const blockColors = {
-  warmup: "#e53935",
-  run: "#1e88e5",
-  rest: "#9e9e9e",
-  cooldown: "#43a047",
-  repeat: "#6d4c41",
-};
+import theme from "../theme/theme"; // ✅ import your theme
 
 function BlockPreview({ block, nested = false }) {
-  const color = blockColors[block.type] || "#ccc";
+  const type = (block.type || "").toLowerCase();
+  const color = theme.colors[type] || "#ccc";
 
   const renderDetails = () => {
     const isDistance = block.durationType === "distance";

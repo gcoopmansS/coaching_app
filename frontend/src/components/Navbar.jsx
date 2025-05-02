@@ -11,8 +11,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Notifications from "./Notifications";
+import theme from "../theme/theme"; // ✅ Import your theme
 
-// ✅ Load backend base URL from env
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Navbar({ user: propUser, setUser }) {
@@ -27,13 +27,8 @@ export default function Navbar({ user: propUser, setUser }) {
     }
   }, [propUser]);
 
-  const handleMenuOpen = (e) => {
-    setAnchorEl(e.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
   const handleNavigate = (path) => {
     handleMenuClose();
@@ -53,7 +48,7 @@ export default function Navbar({ user: propUser, setUser }) {
     <AppBar
       position="static"
       sx={{
-        background: "linear-gradient(to right, #ff512f, #dd2476)",
+        background: `linear-gradient(to right, ${theme.colors.primary}, ${theme.colors.secondary})`,
         boxShadow: "none",
       }}
     >
@@ -61,10 +56,13 @@ export default function Navbar({ user: propUser, setUser }) {
         <Typography
           variant="h6"
           component="div"
-          sx={{ cursor: "pointer" }}
           onClick={() =>
             handleNavigate(user.role === "coach" ? "/coach" : "/runner")
           }
+          sx={{
+            cursor: "pointer",
+            ...theme.typography.heading,
+          }}
         >
           Coaching App
         </Typography>
@@ -89,7 +87,11 @@ export default function Navbar({ user: propUser, setUser }) {
                   ? `${API_URL}${user.profilePicture}`
                   : user?.profilePicture
               }
-              sx={{ width: 36, height: 36 }}
+              sx={{
+                width: 36,
+                height: 36,
+                border: `2px solid ${theme.colors.background}`,
+              }}
             />
           </IconButton>
 
@@ -112,23 +114,9 @@ export default function Navbar({ user: propUser, setUser }) {
             </MenuItem>
             {user.role === "runner" && (
               <MenuItem onClick={() => handleNavigate("/runner/explore")}>
-                Explore Coaches
+                Explore
               </MenuItem>
             )}
-            {user.role === "coach" && [
-              <MenuItem
-                key="requests"
-                onClick={() => handleNavigate("/coach/requests")}
-              >
-                Coaching Requests
-              </MenuItem>,
-              <MenuItem
-                key="saved"
-                onClick={() => handleNavigate("/coach/saved-workouts")}
-              >
-                Saved Workouts
-              </MenuItem>,
-            ]}
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </Box>

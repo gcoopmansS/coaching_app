@@ -16,12 +16,8 @@ import { useEffect, useState } from "react";
 import GradientButton from "./GradientButton";
 import BlockEditor from "./BlockEditor";
 import CloseIcon from "@mui/icons-material/Close";
-import {
-  getWorkoutTotalDistance,
-  getWorkoutTotalTime,
-} from "../utils/workoutMetrics";
+import theme from "../theme/theme"; // ✅ import centralized theme
 
-// ✅ Load backend URL from Vite env
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function WorkoutModal({
@@ -179,6 +175,7 @@ export default function WorkoutModal({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          ...theme.typography.heading,
         }}
       >
         {workoutToEdit ? "Edit Workout" : "Schedule Workout"}
@@ -222,12 +219,6 @@ export default function WorkoutModal({
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
-
-            {/* 🧠 Total Estimates Summary */}
-            <Typography variant="subtitle2" color="text.secondary">
-              Estimated: {getWorkoutTotalDistance(blocks).toFixed(2)} km •{" "}
-              {Math.round(getWorkoutTotalTime(blocks))} min
-            </Typography>
 
             {blocks.map((block, i) => (
               <BlockEditor

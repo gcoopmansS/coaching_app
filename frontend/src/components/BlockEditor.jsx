@@ -6,23 +6,15 @@ import {
   IconButton,
   Typography,
   Stack,
-  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckIcon from "@mui/icons-material/Check";
 import GradientButton from "./GradientButton";
+import theme from "../theme/theme"; // ✅ import theme
 
 const durationTypes = ["time", "distance"];
 const intensityTypes = ["none", "pace", "heartRate", "speed"];
-
-const blockColors = {
-  warmup: "#e53935",
-  run: "#1e88e5",
-  rest: "#9e9e9e",
-  cooldown: "#43a047",
-  repeat: "#6d4c41",
-};
 
 export default function BlockEditor({
   block = {},
@@ -64,20 +56,20 @@ export default function BlockEditor({
     update("blocks", updatedBlocks);
   };
 
-  const color = blockColors[block.type] || "#ccc";
+  const type = (block.type || "").toLowerCase();
+  const color = theme.colors[type] || "#ccc";
 
   return (
     <Box
       sx={{
-        p: 1.5,
-        borderRadius: 1,
+        p: 2,
+        borderRadius: theme.borderRadius.md,
         mb: 2,
         borderLeft: `6px solid ${color}`,
-        backgroundColor: nested ? "#fff" : "#f9f9f9", // 👈 change here
+        backgroundColor: nested ? "#fff" : theme.colors.background,
         fontSize: "0.9rem",
       }}
     >
-      {/* Header: always show Edit and Delete icons */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="subtitle1" fontWeight="bold">
           {block.type?.charAt(0).toUpperCase() + block.type.slice(1)}
@@ -97,12 +89,10 @@ export default function BlockEditor({
         )}
       </Stack>
 
-      {/* Body */}
       {editing ? (
         <>
           {block.type === "repeat" ? (
             <>
-              {/* Repeat Block Editing */}
               <Stack
                 direction="row"
                 alignItems="center"
@@ -130,7 +120,7 @@ export default function BlockEditor({
                     block={b}
                     onChange={(updated) => handleNestedChange(i, updated)}
                     onDelete={() => deleteNestedBlock(i)}
-                    nested={true}
+                    nested
                   />
                 ))}
               </Stack>
@@ -139,7 +129,6 @@ export default function BlockEditor({
                 <GradientButton
                   onClick={addNestedBlock}
                   size="small"
-                  color="secondary"
                   variant="outlined"
                 >
                   Add Block to Repeat
@@ -148,8 +137,6 @@ export default function BlockEditor({
             </>
           ) : (
             <>
-              {/* Normal Block Editing */}
-              {/* Only show Type field if NOT repeat */}
               <TextField
                 select
                 label="Type"
@@ -239,7 +226,6 @@ export default function BlockEditor({
         </>
       ) : (
         <Box sx={{ mt: 2 }}>
-          {/* View Mode */}
           {block.type !== "repeat" ? (
             <>
               {block.description && (
