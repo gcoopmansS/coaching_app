@@ -16,7 +16,9 @@ import { useEffect, useState } from "react";
 import GradientButton from "./GradientButton";
 import BlockEditor from "./BlockEditor";
 import CloseIcon from "@mui/icons-material/Close";
-import theme from "../theme/theme"; // ✅ import centralized theme
+import theme from "../theme/theme";
+
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -126,6 +128,16 @@ export default function WorkoutModal({
     }
   };
 
+  const handleDragEnd = (result) => {
+    const { source, destination } = result;
+    if (!destination || source.index === destination.index) return;
+
+    const reordered = Array.from(blocks);
+    const [moved] = reordered.splice(source.index, 1);
+    reordered.splice(destination.index, 0, moved);
+    setBlocks(reordered);
+  };
+
   const addBlock = () => {
     setBlocks([
       ...blocks,
@@ -220,22 +232,54 @@ export default function WorkoutModal({
               onChange={(e) => setDate(e.target.value)}
             />
 
-            {blocks.map((block, i) => (
-              <BlockEditor
-                key={i}
-                block={block}
-                onChange={(updated) => {
-                  const newBlocks = [...blocks];
-                  newBlocks[i] = updated;
-                  setBlocks(newBlocks);
-                }}
-                onDelete={() => {
-                  const newBlocks = [...blocks];
-                  newBlocks.splice(i, 1);
-                  setBlocks(newBlocks);
-                }}
-              />
-            ))}
+            {/* ✅ DRAGGABLE BLOCK LIST */}
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="blocks">
+                {(provided) => (
+                  <Stack
+                    spacing={2}
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {blocks.map((block, i) => (
+                      <Draggable
+                        key={`block-${i}`}
+                        draggableId={`block-${i}`}
+                        index={i}
+                      >
+                        {(provided, snapshot) => (
+                          <Box
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            sx={{
+                              boxShadow: snapshot.isDragging
+                                ? "0 0 8px rgba(0,0,0,0.2)"
+                                : "none",
+                            }}
+                          >
+                            <BlockEditor
+                              block={block}
+                              onChange={(updated) => {
+                                const newBlocks = [...blocks];
+                                newBlocks[i] = updated;
+                                setBlocks(newBlocks);
+                              }}
+                              onDelete={() => {
+                                const newBlocks = [...blocks];
+                                newBlocks.splice(i, 1);
+                                setBlocks(newBlocks);
+                              }}
+                              dragHandleProps={provided.dragHandleProps} // ✅ passed here
+                            />
+                          </Box>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </Stack>
+                )}
+              </Droppable>
+            </DragDropContext>
 
             <Stack direction="row" spacing={2}>
               <GradientButton onClick={addBlock} variant="outlined">
