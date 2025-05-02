@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import LoginPage from "./pages/LoginPage";
@@ -13,35 +14,40 @@ import CoachDashboard from "./pages/CoachDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import ExploreCoachesPage from "./pages/ExploreCoachesPage";
 import SavedWorkoutsPage from "./pages/SavedWorkoutsPage";
-import CoachRequestsPage from "./pages/CoachRequests"; // ✅ ADD THIS
+import CoachRequestsPage from "./pages/CoachRequests";
 import RunnerOverviewPage from "./pages/RunnerOverviewPage";
 
-function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const localUser = localStorage.getItem("user");
-    if (localUser) {
-      setUser(JSON.parse(localUser));
-    }
-  }, []);
+function AppRoutes({ user, setUser }) {
+  const location = useLocation();
+  const hideNavbar = ["/login", "/signup"].includes(location.pathname);
 
   return (
-    <Router>
-      {user && <Navbar user={user} setUser={setUser} />}
+    <>
+      {!hideNavbar && user && <Navbar user={user} setUser={setUser} />}
 
       <Routes>
         <Route
           path="/"
           element={<Navigate to={user ? `/${user.role}` : "/login"} />}
         />
-        <Route path="/login" element={<LoginPage setUser={setUser} />} />{" "}
-        <Route path="/signup" element={<SignupPage />} />
+        <Route
+          path="/login"
+          element={
+            user ? (
+              <Navigate to={`/${user.role}`} />
+            ) : (
+              <LoginPage setUser={setUser} />
+            )
+          }
+        />
+        <Route
+          path="/signup"
+          element={user ? <Navigate to={`/${user.role}`} /> : <SignupPage />}
+        />
         <Route
           path="/profile"
           element={<ProfilePage user={user} setUser={setUser} />}
         />
-        {/* Role-specific routes */}
         <Route path="/runner" element={<RunnerDashboard user={user} />} />
         <Route
           path="/runner/explore"
@@ -61,8 +67,23 @@ function App() {
           element={<RunnerOverviewPage />}
         />
       </Routes>
-    </Router>
+    </>
   );
 }
 
-export default App;
+export default function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  }, []);
+
+  return (
+    <Router>
+      <AppRoutes user={user} setUser={setUser} />
+    </Router>
+  );
+}

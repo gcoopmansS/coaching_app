@@ -1,7 +1,15 @@
-import { useState } from "react";
-import { Box, TextField, Typography, Alert, Stack } from "@mui/material";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  TextField,
+  Typography,
+  Alert,
+  Stack,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
+import theme from "../theme/theme"; // ✅ Theme support
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -9,7 +17,19 @@ export default function LoginPage({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      navigate(user.role === "runner" ? "/runner" : "/coach");
+    } else {
+      setCheckingSession(false);
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -38,11 +58,42 @@ export default function LoginPage({ setUser }) {
     }
   };
 
+  if (checkingSession) {
+    return (
+      <Box
+        sx={{
+          mt: 12,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ maxWidth: 400, mx: "auto", mt: 10 }}>
-      <Typography variant="h4" gutterBottom align="center">
+    <Box
+      sx={{
+        maxWidth: 400,
+        mx: "auto",
+        mt: 10,
+        p: 3,
+        backgroundColor: "#fff",
+        borderRadius: theme.borderRadius.md,
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+      }}
+    >
+      <Typography
+        variant="h4"
+        gutterBottom
+        align="center"
+        sx={{ ...theme.typography.heading }}
+      >
         Log In
       </Typography>
+
       <Stack spacing={2}>
         {error && <Alert severity="error">{error}</Alert>}
 

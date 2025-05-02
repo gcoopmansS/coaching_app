@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -6,9 +6,11 @@ import {
   MenuItem,
   Alert,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
+import theme from "../theme/theme";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -23,6 +25,17 @@ export default function SignupPage() {
 
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      navigate(user.role === "runner" ? "/runner" : "/coach");
+    } else {
+      setCheckingSession(false);
+    }
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,15 +62,37 @@ export default function SignupPage() {
       } else {
         setError(data.message || "Signup failed");
       }
-      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("Server error");
     }
   };
 
+  if (checkingSession) {
+    return (
+      <Box sx={{ mt: 12, display: "flex", justifyContent: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ maxWidth: 400, mx: "auto", mt: 10 }}>
-      <Typography variant="h4" gutterBottom align="center">
+    <Box
+      sx={{
+        maxWidth: 400,
+        mx: "auto",
+        mt: 10,
+        p: 3,
+        backgroundColor: "#fff",
+        borderRadius: theme.borderRadius.md,
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+      }}
+    >
+      <Typography
+        variant="h4"
+        gutterBottom
+        align="center"
+        sx={{ ...theme.typography.heading }}
+      >
         Create an Account
       </Typography>
 
@@ -119,7 +154,7 @@ export default function SignupPage() {
         </form>
 
         <GradientButton
-          color="success"
+          color="secondary"
           fullWidth
           variant="contained"
           onClick={() => navigate("/login")}
