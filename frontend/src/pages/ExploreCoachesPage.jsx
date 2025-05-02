@@ -11,6 +11,7 @@ import {
 import GradientButton from "../components/GradientButton";
 import { formatDate } from "../utils/formatDate";
 import CoachProfileModal from "../components/CoachProfileModal";
+import theme from "../theme/theme";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -31,52 +32,83 @@ export default function ExploreCoachesPage() {
         Explore Coaches
       </Typography>
 
-      <Grid container spacing={2}>
-        {coaches.map((coach) => (
-          <Grid item xs={12} sm={6} md={4} key={coach._id}>
-            <Card
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <CardMedia
-                component="img"
-                height="160"
-                image={
-                  coach.profilePicture
-                    ? `${API_URL}${coach.profilePicture}`
-                    : "https://via.placeholder.com/300x160?text=No+Image"
-                }
-                alt={coach.name}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6">{coach.name}</Typography>
-                <Typography variant="body2">
-                  Location: {coach.city || "Unknown City"}
-                </Typography>
-                <Typography variant="body2">
-                  Date of Birth:{" "}
-                  {coach.dateOfBirth
-                    ? formatDate(coach.dateOfBirth)
-                    : "Unknown"}
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  {coach.bio || "No bio provided."}
-                </Typography>
-              </CardContent>
-              <Box sx={{ p: 2, pt: 0 }}>
-                <GradientButton
-                  fullWidth
-                  onClick={() => setSelectedCoach(coach)}
-                >
-                  View Profile
-                </GradientButton>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
+      <Grid container spacing={3}>
+        {coaches.map((coach) => {
+          const imageUrl = coach.profilePicture
+            ? `${API_URL}${coach.profilePicture}`
+            : null;
+          const initial = coach.name?.charAt(0).toUpperCase() || "?";
+
+          return (
+            <Grid item xs={12} sm={6} md={4} key={coach._id}>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRadius: theme.borderRadius.md,
+                  overflow: "hidden",
+                }}
+              >
+                {imageUrl ? (
+                  <CardMedia
+                    component="img"
+                    height="160"
+                    image={imageUrl}
+                    alt={coach.name}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      height: 160,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: theme.colors.run,
+                    }}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        fontSize: "2rem",
+                        bgcolor: "#fff",
+                        color: theme.colors.run,
+                      }}
+                    >
+                      {initial}
+                    </Avatar>
+                  </Box>
+                )}
+
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6">{coach.name}</Typography>
+                  <Typography variant="body2">
+                    Location: {coach.city || "Unknown City"}
+                  </Typography>
+                  <Typography variant="body2">
+                    Date of Birth:{" "}
+                    {coach.dateOfBirth
+                      ? formatDate(coach.dateOfBirth)
+                      : "Unknown"}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    {coach.bio || "No bio provided."}
+                  </Typography>
+                </CardContent>
+
+                <Box sx={{ p: 2, pt: 0 }}>
+                  <GradientButton
+                    fullWidth
+                    onClick={() => setSelectedCoach(coach)}
+                  >
+                    View Profile
+                  </GradientButton>
+                </Box>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
       <CoachProfileModal
