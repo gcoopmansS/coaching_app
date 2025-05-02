@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Box, TextField, Typography, Alert, Stack } from "@mui/material";
+import {
+  Box,
+  TextField,
+  Typography,
+  Alert,
+  Stack,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
 
@@ -9,11 +16,13 @@ export default function LoginPage({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ loading state
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // ✅ Start loading
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -35,6 +44,8 @@ export default function LoginPage({ setUser }) {
     } catch (err) {
       console.error("Login error:", err);
       setError("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false); // ✅ End loading
     }
   };
 
@@ -82,13 +93,19 @@ export default function LoginPage({ setUser }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
             <GradientButton
               color="primary"
               fullWidth
               type="submit"
               sx={{ mt: 2 }}
+              disabled={loading} // ✅ prevent multiple submits
             >
-              Log In
+              {loading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                "Log In"
+              )}
             </GradientButton>
           </form>
 
