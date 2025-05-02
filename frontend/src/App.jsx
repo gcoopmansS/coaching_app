@@ -16,6 +16,7 @@ import ExploreCoachesPage from "./pages/ExploreCoachesPage";
 import SavedWorkoutsPage from "./pages/SavedWorkoutsPage";
 import CoachRequestsPage from "./pages/CoachRequests";
 import RunnerOverviewPage from "./pages/RunnerOverviewPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function AppRoutes({ user, setUser }) {
   const location = useLocation();
@@ -30,6 +31,7 @@ function AppRoutes({ user, setUser }) {
           path="/"
           element={<Navigate to={user ? `/${user.role}` : "/login"} />}
         />
+
         <Route
           path="/login"
           element={
@@ -40,31 +42,74 @@ function AppRoutes({ user, setUser }) {
             )
           }
         />
+
         <Route
           path="/signup"
           element={user ? <Navigate to={`/${user.role}`} /> : <SignupPage />}
         />
+
+        {/* ✅ PROTECTED ROUTES */}
         <Route
           path="/profile"
-          element={<ProfilePage user={user} setUser={setUser} />}
+          element={
+            <ProtectedRoute user={user}>
+              <ProfilePage user={user} setUser={setUser} />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/runner" element={<RunnerDashboard user={user} />} />
+
+        <Route
+          path="/runner"
+          element={
+            <ProtectedRoute user={user}>
+              <RunnerDashboard user={user} />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/runner/explore"
-          element={<ExploreCoachesPage user={user} />}
+          element={
+            <ProtectedRoute user={user}>
+              <ExploreCoachesPage user={user} />
+            </ProtectedRoute>
+          }
         />
-        <Route path="/coach" element={<CoachDashboard user={user} />} />
+
+        <Route
+          path="/coach"
+          element={
+            <ProtectedRoute user={user}>
+              <CoachDashboard user={user} />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/coach/requests"
-          element={<CoachRequestsPage user={user} />}
+          element={
+            <ProtectedRoute user={user}>
+              <CoachRequestsPage user={user} />
+            </ProtectedRoute>
+          }
         />
+
         <Route
           path="/coach/saved-workouts"
-          element={<SavedWorkoutsPage user={user} />}
+          element={
+            <ProtectedRoute user={user}>
+              <SavedWorkoutsPage user={user} />
+            </ProtectedRoute>
+          }
         />
+
         <Route
           path="/coach/runner/:runnerId"
-          element={<RunnerOverviewPage />}
+          element={
+            <ProtectedRoute user={user}>
+              <RunnerOverviewPage />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </>

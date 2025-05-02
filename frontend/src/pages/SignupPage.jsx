@@ -62,6 +62,7 @@ export default function SignupPage() {
       } else {
         setError(data.message || "Signup failed");
       }
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("Server error");
     }

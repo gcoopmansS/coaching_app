@@ -18,6 +18,7 @@ export default function LoginPage({ setUser }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [checkingSession, setCheckingSession] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -34,6 +35,7 @@ export default function LoginPage({ setUser }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -55,6 +57,8 @@ export default function LoginPage({ setUser }) {
     } catch (err) {
       console.error("Login error:", err);
       setError("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,8 +122,9 @@ export default function LoginPage({ setUser }) {
             fullWidth
             type="submit"
             sx={{ mt: 2 }}
+            disabled={loading}
           >
-            Log In
+            {loading ? <CircularProgress size={20} /> : "Log In"}
           </GradientButton>
         </form>
 
