@@ -10,28 +10,30 @@ import {
   ToggleButton,
   Paper,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import WorkoutCalendar from "../components/WorkoutCalendar";
-import BlockPreview from "../components/WorkoutPreviewBlock";
 import MiniBlockBar from "../components/MiniBlockBar";
+import { authFetch } from "../utils/api"; // ✅ new import
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function RunnerDashboard() {
-  const user = JSON.parse(localStorage.getItem("user"));
+export default function RunnerDashboard({ user, setUser }) {
   const [coaches, setCoaches] = useState([]);
   const [workouts, setWorkouts] = useState([]);
   const [view, setView] = useState("list");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCoaches = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(
+        const res = await authFetch(
           `${API_URL}/api/connections/runner/${user.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
+          {},
+          () => {
+            setUser(null);
+            navigate("/login");
           }
         );
         const data = await res.json();
@@ -43,10 +45,14 @@ export default function RunnerDashboard() {
 
     const fetchWorkouts = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/api/workouts/runner/${user.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch(
+          `${API_URL}/api/workouts/runner/${user.id}`,
+          {},
+          () => {
+            setUser(null);
+            navigate("/login");
+          }
+        );
         const data = await res.json();
         setWorkouts(data);
       } catch (err) {
@@ -56,7 +62,7 @@ export default function RunnerDashboard() {
 
     fetchCoaches();
     fetchWorkouts();
-  }, [user.id]);
+  }, [user?.id, setUser, navigate]);
 
   const calendarEvents = workouts.map((w) => ({
     id: w._id,
@@ -119,8 +125,6 @@ export default function RunnerDashboard() {
 
       {view === "list" ? (
         <Box sx={{ pl: { xs: 0, sm: 10 } }}>
-          {" "}
-          {/* Reserved margin on left */}
           <Stack spacing={4} sx={{ position: "relative" }}>
             {workouts
               .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -130,7 +134,6 @@ export default function RunnerDashboard() {
 
                 return (
                   <Box key={w._id} sx={{ position: "relative" }}>
-                    {/* Date label outside frame but within margin */}
                     <Box
                       sx={{
                         position: "absolute",

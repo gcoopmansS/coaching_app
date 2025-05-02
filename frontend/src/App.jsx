@@ -6,6 +6,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -24,6 +25,7 @@ function AppRoutes({ user, setUser }) {
 
   return (
     <>
+      {/* ✅ Hide navbar for login/signup */}
       {!hideNavbar && user && <Navbar user={user} setUser={setUser} />}
 
       <Routes>
@@ -48,7 +50,7 @@ function AppRoutes({ user, setUser }) {
           element={user ? <Navigate to={`/${user.role}`} /> : <SignupPage />}
         />
 
-        {/* ✅ PROTECTED ROUTES */}
+        {/* ✅ Protected routes */}
         <Route
           path="/profile"
           element={
@@ -122,7 +124,12 @@ export default function App() {
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
-      setUser(JSON.parse(stored));
+      try {
+        setUser(JSON.parse(stored));
+      } catch (err) {
+        console.error("Failed to parse stored user", err);
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 

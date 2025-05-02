@@ -34,7 +34,7 @@ export default function GradientButton({
 
   return (
     <Button
-      variant="text"
+      variant={variant}
       {...props}
       sx={{ ...baseStyles, ...gradientStyles, ...props.sx }}
     >

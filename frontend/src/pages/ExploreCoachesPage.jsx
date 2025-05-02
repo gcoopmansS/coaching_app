@@ -12,19 +12,25 @@ import GradientButton from "../components/GradientButton";
 import { formatDate } from "../utils/formatDate";
 import CoachProfileModal from "../components/CoachProfileModal";
 import theme from "../theme/theme";
+import { authFetch } from "../utils/api"; // ✅ import secure fetch
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function ExploreCoachesPage() {
+export default function ExploreCoachesPage({ setUser }) {
   const [coaches, setCoaches] = useState([]);
   const [selectedCoach, setSelectedCoach] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${API_URL}/api/users/coaches`)
+    authFetch(`${API_URL}/api/users/coaches`, {}, () => {
+      setUser(null);
+      navigate("/login");
+    })
       .then((res) => res.json())
       .then(setCoaches)
       .catch((err) => console.error("Error fetching coaches:", err));
-  }, []);
+  }, [setUser, navigate]);
 
   return (
     <Box sx={{ p: 3 }}>

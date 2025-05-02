@@ -17,8 +17,9 @@ import GradientButton from "./GradientButton";
 import BlockEditor from "./BlockEditor";
 import CloseIcon from "@mui/icons-material/Close";
 import theme from "../theme/theme";
-
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { authFetch } from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,6 +28,7 @@ export default function WorkoutModal({
   onClose,
   runnerId,
   workoutToEdit,
+  setUser,
 }) {
   const coach = JSON.parse(localStorage.getItem("user"));
   const [savedWorkouts, setSavedWorkouts] = useState([]);
@@ -34,18 +36,26 @@ export default function WorkoutModal({
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [blocks, setBlocks] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (coach?.id) {
-      fetch(`${API_URL}/api/saved-workouts/${coach.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      authFetch(
+        `${API_URL}/api/saved-workouts/${coach.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+        () => {
+          setUser(null);
+          navigate("/login");
+        }
+      )
         .then((res) => res.json())
         .then(setSavedWorkouts)
         .catch((err) => console.error("Failed to fetch saved workouts:", err));
     }
-  }, [coach?.id]);
+  }, [coach?.id, setUser, navigate]);
 
   useEffect(() => {
     if (workoutToEdit) {
@@ -94,7 +104,6 @@ export default function WorkoutModal({
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
     const payload = {
       runnerId,
       coachId: coach.id,
@@ -103,20 +112,26 @@ export default function WorkoutModal({
       blocks,
     };
 
-    try {
-      const url = workoutToEdit
-        ? `${API_URL}/api/workouts/${workoutToEdit._id}`
-        : `${API_URL}/api/workouts`;
-      const method = workoutToEdit ? "PATCH" : "POST";
+    const url = workoutToEdit
+      ? `${API_URL}/api/workouts/${workoutToEdit._id}`
+      : `${API_URL}/api/workouts`;
+    const method = workoutToEdit ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+    try {
+      const res = await authFetch(
+        url,
+        {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+        () => {
+          setUser(null);
+          navigate("/login");
+        }
+      );
 
       if (res.ok) {
         onClose(true);
@@ -232,7 +247,6 @@ export default function WorkoutModal({
               onChange={(e) => setDate(e.target.value)}
             />
 
-            {/* ✅ DRAGGABLE BLOCK LIST */}
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="blocks">
                 {(provided) => (
@@ -269,7 +283,7 @@ export default function WorkoutModal({
                                 newBlocks.splice(i, 1);
                                 setBlocks(newBlocks);
                               }}
-                              dragHandleProps={provided.dragHandleProps} // ✅ passed here
+                              dragHandleProps={provided.dragHandleProps}
                             />
                           </Box>
                         )}

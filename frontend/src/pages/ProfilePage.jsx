@@ -12,7 +12,7 @@ import GradientButton from "../components/GradientButton";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Profile({ setUser }) {
+export default function ProfilePage({ setUser }) {
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const [user, setLocalUser] = useState(storedUser);
 

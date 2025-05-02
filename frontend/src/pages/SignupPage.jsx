@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -6,11 +6,9 @@ import {
   MenuItem,
   Alert,
   Stack,
-  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
-import theme from "../theme/theme";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,17 +23,6 @@ export default function SignupPage() {
 
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [checkingSession, setCheckingSession] = useState(true);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      navigate(user.role === "runner" ? "/runner" : "/coach");
-    } else {
-      setCheckingSession(false);
-    }
-  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -68,101 +55,98 @@ export default function SignupPage() {
     }
   };
 
-  if (checkingSession) {
-    return (
-      <Box sx={{ mt: 12, display: "flex", justifyContent: "center" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box
       sx={{
-        maxWidth: 400,
-        mx: "auto",
-        mt: 10,
+        minHeight: "100vh",
+        backgroundColor: "#f9f9f9",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         p: 3,
-        backgroundColor: "#fff",
-        borderRadius: theme.borderRadius.md,
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
       }}
     >
-      <Typography
-        variant="h4"
-        gutterBottom
-        align="center"
-        sx={{ ...theme.typography.heading }}
+      <Box
+        sx={{
+          maxWidth: 400,
+          width: "100%",
+          backgroundColor: "white",
+          borderRadius: 2,
+          boxShadow: 3,
+          p: 4,
+        }}
       >
-        Create an Account
-      </Typography>
+        <Typography variant="h4" gutterBottom align="center">
+          Create an Account
+        </Typography>
 
-      <Stack spacing={2}>
-        {success && (
-          <Alert severity="success">
-            Account created! Redirecting to login...
-          </Alert>
-        )}
-        {error && <Alert severity="error">{error}</Alert>}
+        <Stack spacing={2}>
+          {success && (
+            <Alert severity="success">
+              Account created! Redirecting to login...
+            </Alert>
+          )}
+          {error && <Alert severity="error">{error}</Alert>}
 
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
+          <form onSubmit={handleSubmit}>
+            <TextField
+              label="Name"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              select
+              label="Role"
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="runner">Runner</MenuItem>
+              <MenuItem value="coach">Coach</MenuItem>
+            </TextField>
+
+            <GradientButton type="submit" color="primary" fullWidth>
+              Sign Up
+            </GradientButton>
+          </form>
+
+          <GradientButton
+            color="success"
             fullWidth
-            required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            fullWidth
-            required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            fullWidth
-            required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            select
-            label="Role"
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            fullWidth
-            required
-            sx={{ mb: 2 }}
+            variant="contained"
+            onClick={() => navigate("/login")}
           >
-            <MenuItem value="runner">Runner</MenuItem>
-            <MenuItem value="coach">Coach</MenuItem>
-          </TextField>
-
-          <GradientButton type="submit" color="primary" fullWidth>
-            Sign Up
+            Already have an account? Log in
           </GradientButton>
-        </form>
-
-        <GradientButton
-          color="secondary"
-          fullWidth
-          variant="contained"
-          onClick={() => navigate("/login")}
-        >
-          Already have an account? Log in
-        </GradientButton>
-      </Stack>
+        </Stack>
+      </Box>
     </Box>
   );
 }

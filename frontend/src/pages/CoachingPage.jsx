@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import {
   Paper,
 } from "@mui/material";
 import Navbar from "../components/Navbar";
+import { authFetch } from "../utils/api"; // ✅ use secure fetch
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -20,8 +21,9 @@ const blockTypes = [
   { label: "Rest", value: "rest" },
 ];
 
-export default function CoachingPage() {
+export default function CoachingPage({ setUser }) {
   const { id } = useParams(); // runnerId
+  const navigate = useNavigate();
   const coach = JSON.parse(localStorage.getItem("user"));
 
   const [title, setTitle] = useState("");
@@ -49,8 +51,6 @@ export default function CoachingPage() {
   };
 
   const submitWorkout = async () => {
-    const token = localStorage.getItem("token");
-
     const workout = {
       runnerId: id,
       coachId: coach.id,
@@ -61,16 +61,21 @@ export default function CoachingPage() {
     };
 
     try {
-      const res = await fetch(`${API_URL}/api/workouts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await authFetch(
+        `${API_URL}/api/workouts`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(workout),
         },
-        body: JSON.stringify(workout),
-      });
+        () => {
+          setUser(null);
+          navigate("/login");
+        }
+      );
 
       const data = await res.json();
+
       if (res.ok) {
         alert("Workout saved!");
         setTitle("");

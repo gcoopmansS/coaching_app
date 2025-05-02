@@ -10,37 +10,28 @@ import {
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CircleIcon from "@mui/icons-material/Circle";
+import { authFetch } from "../utils/api";
+import { useNavigate } from "react-router-dom";
 
-// ✅ Load backend base URL from env
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Notifications({ user }) {
+export default function Notifications({ user, setUser }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const open = Boolean(anchorEl);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    if (!user?.id) return;
 
-    if (!token || !user?.id) {
-      console.error("No token or user ID found. Skipping notifications fetch.");
-      return;
-    }
-
-    fetch(`${API_URL}/api/users/${user.id}/notifications`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    authFetch(`${API_URL}/api/users/${user.id}/notifications`, {}, () => {
+      setUser(null);
+      navigate("/login");
     })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch notifications");
-        }
-        return res.json();
-      })
+      .then((res) => res.json())
       .then(setNotifications)
       .catch((err) => console.error("Notification fetch error:", err));
-  }, [user]);
+  }, [user, setUser, navigate]);
 
   const unseenCount = notifications.filter((n) => !n.seen).length;
 
@@ -50,21 +41,16 @@ export default function Notifications({ user }) {
     const userId = user?._id || user?.id;
     if (!userId) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No token found. Cannot mark notifications as seen.");
-      return;
-    }
+    authFetch(
+      `${API_URL}/api/users/${userId}/notifications/mark-seen`,
+      { method: "PATCH" },
+      () => {
+        setUser(null);
+        navigate("/login");
+      }
+    );
 
-    // Mark notifications as seen
-    fetch(`${API_URL}/api/users/${userId}/notifications/mark-seen`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    // Update local state
+    // Mark as seen locally
     setNotifications((prev) => prev.map((n) => ({ ...n, seen: true })));
   };
 

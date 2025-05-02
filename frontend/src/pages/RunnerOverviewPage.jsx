@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import {
   Box,
@@ -10,22 +10,23 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
-  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import GradientButton from "../components/GradientButton";
 import WorkoutModal from "../components/WorkoutModal";
 import BlockPreview from "../components/WorkoutPreviewBlock";
-import WorkoutCalendar from "../components/WorkoutCalendar"; // <-- REQUIRED
+import WorkoutCalendar from "../components/WorkoutCalendar";
 import {
   getWorkoutTotalDistance,
   getWorkoutTotalTime,
 } from "../utils/workoutMetrics";
+import { authFetch } from "../utils/api"; // ✅ import helper
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function RunnerOverviewPage() {
+export default function RunnerOverviewPage({ setUser }) {
   const { runnerId } = useParams();
+  const navigate = useNavigate();
   const [runner, setRunner] = useState(null);
   const [workouts, setWorkouts] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -34,26 +35,26 @@ export default function RunnerOverviewPage() {
   const [editWorkout, setEditWorkout] = useState(null);
 
   const fetchWorkouts = useCallback(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${API_URL}/api/workouts/runner/${runnerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    authFetch(`${API_URL}/api/workouts/runner/${runnerId}`, {}, () => {
+      setUser(null);
+      navigate("/login");
     })
       .then((res) => res.json())
       .then(setWorkouts)
       .catch((err) => console.error("Error loading workouts:", err));
-  }, [runnerId]);
+  }, [runnerId, setUser, navigate]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(`${API_URL}/api/users/${runnerId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    authFetch(`${API_URL}/api/users/${runnerId}`, {}, () => {
+      setUser(null);
+      navigate("/login");
     })
       .then((res) => res.json())
       .then(setRunner)
       .catch((err) => console.error("Error loading runner:", err));
 
     fetchWorkouts();
-  }, [runnerId, fetchWorkouts]);
+  }, [runnerId, fetchWorkouts, setUser, navigate]);
 
   const calendarEvents = workouts.map((workout) => ({
     id: workout._id,
@@ -83,14 +84,18 @@ export default function RunnerOverviewPage() {
     const workoutId = info.event.id;
     const newDate = info.event.startStr;
 
-    fetch(`${API_URL}/api/workouts/${workoutId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+    authFetch(
+      `${API_URL}/api/workouts/${workoutId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: newDate }),
       },
-      body: JSON.stringify({ date: newDate }),
-    })
+      () => {
+        setUser(null);
+        navigate("/login");
+      }
+    )
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update workout date");
         return res.json();

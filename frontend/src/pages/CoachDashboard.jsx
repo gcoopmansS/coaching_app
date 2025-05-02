@@ -8,44 +8,37 @@ import {
   Grid,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/api"; // ✅ import the utility
 
-// ✅ Environment-based backend URL
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function CoachDashboard() {
-  const user = JSON.parse(localStorage.getItem("user"));
+export default function CoachDashboard({ user, setUser }) {
   const [requests, setRequests] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token || !user?.id) {
-      console.error(
-        "No token or user ID found. Skipping coach dashboard fetch."
-      );
-      return;
-    }
+    if (!user?.id) return;
 
-    fetch(`${API_URL}/api/connections/coach/${user.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        if (res.status === 401) {
-          console.warn("Unauthorized, clearing session...");
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          window.location.href = "/login";
-          return;
-        }
-        if (!res.ok) throw new Error("Failed to fetch athletes");
+    const fetchAthletes = async () => {
+      try {
+        const res = await authFetch(
+          `${API_URL}/api/connections/coach/${user.id}`,
+          {},
+          () => {
+            setUser(null);
+            navigate("/login");
+          }
+        );
 
         const data = await res.json();
         setRequests(data.filter((r) => r.status === "accepted"));
-      })
-      .catch((err) => console.error("Failed to load athletes:", err));
-  }, [user?.id]);
+      } catch (err) {
+        console.error("Failed to load athletes:", err);
+      }
+    };
+
+    fetchAthletes();
+  }, [user?.id, setUser, navigate]);
 
   return (
     <Box sx={{ p: 3 }}>

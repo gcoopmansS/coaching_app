@@ -9,28 +9,29 @@ import {
 import { useState, useEffect } from "react";
 import { formatDate } from "../utils/formatDate";
 import GradientButton from "../components/GradientButton";
+import { authFetch } from "../utils/api"; // ✅ import
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function CoachProfileModal({ coach, open, onClose }) {
+export default function CoachProfileModal({ coach, open, onClose, setUser }) {
   const runner = JSON.parse(localStorage.getItem("user"));
   const [form, setForm] = useState({ goal: "", distance: "", pace: "" });
   const [success, setSuccess] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("none");
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!open || !coach?._id || !runner?.id) return;
 
     const checkConnection = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(
+        const res = await authFetch(
           `${API_URL}/api/connections/check/${runner.id}/${coach._id}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+          {},
+          () => {
+            setUser(null);
+            navigate("/login");
           }
         );
         const data = await res.json();
@@ -41,31 +42,41 @@ export default function CoachProfileModal({ coach, open, onClose }) {
     };
 
     checkConnection();
-  }, [open, coach?._id, runner?.id]); // 👈 clean & minimal
+  }, [open, coach?._id, runner?.id, setUser, navigate]);
 
   const handleRequest = async () => {
-    const token = localStorage.getItem("token");
+    try {
+      const res = await authFetch(
+        `${API_URL}/api/connections`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            runnerId: runner.id,
+            coachId: coach._id,
+            ...form,
+          }),
+        },
+        () => {
+          setUser(null);
+          navigate("/login");
+        }
+      );
 
-    const res = await fetch(`${API_URL}/api/connections`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        runnerId: runner.id,
-        coachId: coach._id,
-        ...form,
-      }),
-    });
+      const data = await res.json();
 
-    const data = await res.json();
-    if (res.ok) {
-      setSuccess("Request sent!");
-      setForm({ goal: "", distance: "", pace: "" });
-      setConnectionStatus("pending");
-    } else {
-      setSuccess(data.message || "Failed to send request");
+      if (res.ok) {
+        setSuccess("Request sent!");
+        setForm({ goal: "", distance: "", pace: "" });
+        setConnectionStatus("pending");
+      } else {
+        setSuccess(data.message || "Failed to send request");
+      }
+    } catch (err) {
+      console.error("Request error:", err);
+      setSuccess("Something went wrong.");
     }
   };
 

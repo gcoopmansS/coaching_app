@@ -11,45 +11,41 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
+import { authFetch } from "../utils/api"; // ✅ authFetch import
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function SavedWorkoutsPage() {
-  const [user] = useState(() => {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+export default function SavedWorkoutsPage({ user, setUser }) {
   const [workouts, setWorkouts] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user || user.role !== "coach") return;
 
-    const token = localStorage.getItem("token");
-
-    fetch(`${API_URL}/api/saved-workouts/${user.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    authFetch(`${API_URL}/api/saved-workouts/${user.id}`, {}, () => {
+      setUser(null);
+      navigate("/login");
     })
       .then((res) => res.json())
       .then((data) => setWorkouts(data))
       .catch((err) => console.error("Error loading saved workouts:", err));
-  }, [user]);
+  }, [user, setUser, navigate]);
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm("Delete this workout?");
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      await fetch(`${API_URL}/api/saved-workouts/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await authFetch(
+        `${API_URL}/api/saved-workouts/${id}`,
+        {
+          method: "DELETE",
         },
-      });
+        () => {
+          setUser(null);
+          navigate("/login");
+        }
+      );
 
       setWorkouts((prev) => prev.filter((w) => w._id !== id));
     } catch (err) {
