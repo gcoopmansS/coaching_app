@@ -9,60 +9,61 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Paper,
+  Skeleton,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import WorkoutCalendar from "../components/WorkoutCalendar";
+import BlockPreview from "../components/WorkoutPreviewBlock";
 import MiniBlockBar from "../components/MiniBlockBar";
-import { authFetch } from "../utils/api"; // ✅ new import
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function RunnerDashboard({ user, setUser }) {
+export default function RunnerDashboard() {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [coaches, setCoaches] = useState([]);
   const [workouts, setWorkouts] = useState([]);
+  const [loadingCoaches, setLoadingCoaches] = useState(true);
+  const [loadingWorkouts, setLoadingWorkouts] = useState(true);
   const [view, setView] = useState("list");
-  const navigate = useNavigate();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     const fetchCoaches = async () => {
       try {
-        const res = await authFetch(
+        const res = await fetch(
           `${API_URL}/api/connections/runner/${user.id}`,
-          {},
-          () => {
-            setUser(null);
-            navigate("/login");
+          {
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         const data = await res.json();
         setCoaches(data);
       } catch (err) {
         console.error("Failed to load coaches:", err);
+      } finally {
+        setLoadingCoaches(false);
       }
     };
 
     const fetchWorkouts = async () => {
       try {
-        const res = await authFetch(
-          `${API_URL}/api/workouts/runner/${user.id}`,
-          {},
-          () => {
-            setUser(null);
-            navigate("/login");
-          }
-        );
+        const res = await fetch(`${API_URL}/api/workouts/runner/${user.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         setWorkouts(data);
       } catch (err) {
         console.error("Failed to load workouts:", err);
+      } finally {
+        setLoadingWorkouts(false);
       }
     };
 
     fetchCoaches();
     fetchWorkouts();
-  }, [user?.id, setUser, navigate]);
+  }, [user.id]);
 
   const calendarEvents = workouts.map((w) => ({
     id: w._id,
@@ -85,22 +86,38 @@ export default function RunnerDashboard({ user, setUser }) {
           Your Coaches
         </Typography>
         <Stack direction="row" spacing={2}>
-          {coaches.map((c) => (
-            <Card key={c._id} sx={{ minWidth: 200 }}>
-              <CardContent
-                sx={{ display: "flex", alignItems: "center", gap: 2 }}
-              >
-                <Avatar
-                  src={`${API_URL}${c.coachId.profilePicture || ""}`}
-                  sx={{ width: 48, height: 48 }}
-                />
-                <Box>
-                  <Typography variant="subtitle1">{c.coachId.name}</Typography>
-                  <Typography variant="caption">{c.goal}</Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+          {loadingCoaches
+            ? Array.from({ length: 2 }).map((_, i) => (
+                <Card key={i} sx={{ minWidth: 200 }}>
+                  <CardContent
+                    sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                  >
+                    <Skeleton variant="circular" width={48} height={48} />
+                    <Box>
+                      <Skeleton width={100} />
+                      <Skeleton width={60} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))
+            : coaches.map((c) => (
+                <Card key={c._id} sx={{ minWidth: 200 }}>
+                  <CardContent
+                    sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                  >
+                    <Avatar
+                      src={`${API_URL}${c.coachId.profilePicture || ""}`}
+                      sx={{ width: 48, height: 48 }}
+                    />
+                    <Box>
+                      <Typography variant="subtitle1">
+                        {c.coachId.name}
+                      </Typography>
+                      <Typography variant="caption">{c.goal}</Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
         </Stack>
       </Box>
 
@@ -109,9 +126,7 @@ export default function RunnerDashboard({ user, setUser }) {
         <ToggleButtonGroup
           value={view}
           exclusive
-          onChange={(e, newView) => {
-            if (newView) setView(newView);
-          }}
+          onChange={(e, newView) => newView && setView(newView)}
           size="small"
         >
           <ToggleButton value="list">
@@ -123,7 +138,16 @@ export default function RunnerDashboard({ user, setUser }) {
         </ToggleButtonGroup>
       </Box>
 
-      {view === "list" ? (
+      {loadingWorkouts ? (
+        <Stack spacing={2}>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Paper key={i} sx={{ p: 2 }}>
+              <Skeleton variant="text" width="40%" />
+              <Skeleton variant="rectangular" height={40} sx={{ mt: 1 }} />
+            </Paper>
+          ))}
+        </Stack>
+      ) : view === "list" ? (
         <Box sx={{ pl: { xs: 0, sm: 10 } }}>
           <Stack spacing={4} sx={{ position: "relative" }}>
             {workouts
@@ -162,11 +186,7 @@ export default function RunnerDashboard({ user, setUser }) {
                     </Box>
 
                     <Paper
-                      sx={{
-                        p: 2,
-                        pl: { xs: 2, sm: 5 },
-                        position: "relative",
-                      }}
+                      sx={{ p: 2, pl: { xs: 2, sm: 5 }, position: "relative" }}
                     >
                       {coach && (
                         <Avatar
