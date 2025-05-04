@@ -6,21 +6,20 @@ import {
   Paper,
   Avatar,
   Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
   Skeleton,
+  IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
 import GradientButton from "../components/GradientButton";
-import WorkoutModal from "../components/WorkoutModal";
-import BlockPreview from "../components/WorkoutPreviewBlock";
+import WorkoutDialog from "../components/WorkoutDialog";
 import WorkoutCalendar from "../components/WorkoutCalendar";
-import {
-  getWorkoutTotalDistance,
-  getWorkoutTotalTime,
-} from "../utils/workoutMetrics";
 import MiniBlockBar from "../components/MiniBlockBar";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -31,10 +30,12 @@ export default function RunnerOverviewPage() {
   const [workouts, setWorkouts] = useState([]);
   const [loadingRunner, setLoadingRunner] = useState(true);
   const [loadingWorkouts, setLoadingWorkouts] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState("view");
   const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [openPreview, setOpenPreview] = useState(false);
-  const [editWorkout, setEditWorkout] = useState(null);
+  const [view, setView] = useState("list");
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   const fetchWorkouts = useCallback(() => {
     const token = localStorage.getItem("token");
@@ -75,14 +76,9 @@ export default function RunnerOverviewPage() {
   const handleEventClick = (info) => {
     const clickedWorkout = workouts.find((w) => w._id === info.event.id);
     if (clickedWorkout) {
-      const loggedInCoachId = JSON.parse(localStorage.getItem("user"))?.id;
-      const editable = clickedWorkout.coachId === loggedInCoachId;
-      setSelectedWorkout({
-        ...clickedWorkout,
-        blocks: clickedWorkout.blocks || [],
-        editable,
-      });
-      setOpenPreview(true);
+      setSelectedWorkout(clickedWorkout);
+      setDialogMode("view");
+      setDialogOpen(true);
     }
   };
 
@@ -109,146 +105,214 @@ export default function RunnerOverviewPage() {
       });
   };
 
+  const handleDelete = async (workoutId) => {
+    const confirmed = window.confirm("Delete this workout?");
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_URL}/api/workouts/${workoutId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchWorkouts();
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         Runner Overview
       </Typography>
 
-      <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center" }}>
-        {loadingRunner ? (
-          <>
-            <Skeleton
-              variant="circular"
-              width={64}
-              height={64}
-              sx={{ mr: 2 }}
-            />
-            <Box>
-              <Skeleton width={120} />
-              <Skeleton width={180} />
-              <Skeleton width={100} />
-            </Box>
-          </>
-        ) : (
-          <>
+      {loadingRunner ? (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Skeleton variant="circular" width={64} height={64} />
+          <Skeleton width="40%" sx={{ mt: 1 }} />
+          <Skeleton width="30%" />
+        </Paper>
+      ) : (
+        runner && (
+          <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center" }}>
             <Avatar
-              src={`${API_URL}${runner?.profilePicture || ""}`}
+              src={`${API_URL}${runner.profilePicture || ""}`}
               sx={{ width: 64, height: 64, mr: 2 }}
             />
             <Box>
-              <Typography variant="h6">{runner?.name}</Typography>
-              <Typography>Email: {runner?.email}</Typography>
-              <Typography>City: {runner?.city || "—"}</Typography>
+              <Typography variant="h6">{runner.name}</Typography>
+              <Typography>Email: {runner.email}</Typography>
+              <Typography>City: {runner.city || "—"}</Typography>
             </Box>
-          </>
-        )}
-      </Paper>
+          </Paper>
+        )
+      )}
 
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, flexWrap: "wrap", gap: 2 }}
       >
         <Typography variant="h6">Planned Workouts</Typography>
-        <GradientButton variant="contained" onClick={() => setShowModal(true)}>
-          + Schedule Workout
-        </GradientButton>
+        <Stack direction="row" spacing={2}>
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={(e, v) => v && setView(v)}
+            size="small"
+          >
+            <ToggleButton value="list">
+              <FormatListBulletedIcon fontSize="small" />
+            </ToggleButton>
+            <ToggleButton value="calendar">
+              <CalendarMonthIcon fontSize="small" />
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          <GradientButton
+            variant="contained"
+            size="small"
+            onClick={() => {
+              setDialogMode("create");
+              setSelectedWorkout(null);
+              setDialogOpen(true);
+            }}
+          >
+            + Schedule Workout
+          </GradientButton>
+        </Stack>
       </Stack>
 
-      <Paper sx={{ p: 2, mb: 3 }}>
-        {loadingWorkouts ? (
-          <Stack spacing={2}>
-            {Array.from({ length: 2 }).map((_, i) => (
-              <Box key={i}>
-                <Skeleton width="30%" />
-                <Skeleton height={40} sx={{ mt: 1 }} />
-              </Box>
-            ))}
+      {loadingWorkouts ? (
+        <Stack spacing={2}>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Paper key={i} sx={{ p: 2 }}>
+              <Skeleton variant="text" width="40%" />
+              <Skeleton variant="rectangular" height={40} sx={{ mt: 1 }} />
+            </Paper>
+          ))}
+        </Stack>
+      ) : view === "list" ? (
+        <Box sx={{ pl: { xs: 0, sm: 10 } }}>
+          <Stack spacing={4} sx={{ position: "relative" }}>
+            {workouts
+              .sort((a, b) => new Date(a.date) - new Date(b.date))
+              .map((w) => {
+                const workoutDate = new Date(w.date);
+                const isEditable = w.coachId === user?.id;
+
+                return (
+                  <Box key={w._id} sx={{ position: "relative" }}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: -80,
+                        top: 24,
+                        textAlign: "right",
+                        pr: 2,
+                        width: 70,
+                        display: { xs: "none", sm: "block" },
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                      >
+                        {workoutDate.toLocaleDateString(undefined, {
+                          weekday: "short",
+                        })}
+                      </Typography>
+                      <Typography variant="body2">
+                        {workoutDate.toLocaleDateString(undefined, {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </Typography>
+                    </Box>
+
+                    <Paper
+                      sx={{
+                        p: 2,
+                        pl: { xs: 2, sm: 5 },
+                        position: "relative",
+                      }}
+                      onClick={() => {
+                        setSelectedWorkout(w);
+                        setDialogMode("view");
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                      >
+                        <Typography variant="h6">{w.title}</Typography>
+
+                        {isEditable && (
+                          <Stack direction="row" spacing={1}>
+                            <Tooltip title="Edit">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedWorkout(w);
+                                  setDialogMode("edit");
+                                  setDialogOpen(true);
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(w._id);
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
+                        )}
+                      </Stack>
+                      <MiniBlockBar blocks={w.blocks} />
+                    </Paper>
+                  </Box>
+                );
+              })}
           </Stack>
-        ) : workouts.length > 0 ? (
+        </Box>
+      ) : (
+        <Paper sx={{ p: 2, mb: 3 }}>
           <WorkoutCalendar
             events={calendarEvents}
             onEventClick={handleEventClick}
             onEventDrop={handleEventDrop}
             editable={true}
-            highlightCoachId={JSON.parse(localStorage.getItem("user"))?.id}
+            highlightCoachId={user?.id}
           />
-        ) : (
-          <Typography>No workouts scheduled yet.</Typography>
-        )}
-      </Paper>
+        </Paper>
+      )}
 
-      <WorkoutModal
-        open={showModal}
+      <WorkoutDialog
+        open={dialogOpen}
         onClose={(refresh) => {
-          setShowModal(false);
-          setEditWorkout(null);
+          setDialogOpen(false);
           if (refresh) fetchWorkouts();
         }}
+        mode={dialogMode}
+        initialWorkout={selectedWorkout}
         runnerId={runnerId}
-        workoutToEdit={editWorkout}
+        coachId={user.id}
+        editable={selectedWorkout?.coachId === user.id}
       />
-
-      <Dialog
-        open={openPreview}
-        onClose={() => setOpenPreview(false)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {selectedWorkout?.title}
-          <IconButton onClick={() => setOpenPreview(false)}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ p: 3 }}>
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-            {new Date(selectedWorkout?.date).toLocaleDateString()}
-          </Typography>
-
-          {selectedWorkout?.blocks && (
-            <Typography
-              variant="subtitle2"
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              Estimated:{" "}
-              {getWorkoutTotalDistance(selectedWorkout.blocks).toFixed(2)} km •{" "}
-              {Math.round(getWorkoutTotalTime(selectedWorkout.blocks))} min
-            </Typography>
-          )}
-
-          <Stack spacing={2}>
-            {selectedWorkout?.blocks?.map((block, i) => (
-              <BlockPreview key={i} block={block} />
-            ))}
-          </Stack>
-
-          {selectedWorkout?.editable && (
-            <Box sx={{ mt: 3, textAlign: "right" }}>
-              <GradientButton
-                variant="contained"
-                onClick={() => {
-                  setOpenPreview(false);
-                  setEditWorkout(selectedWorkout);
-                  setShowModal(true);
-                }}
-              >
-                Edit Workout
-              </GradientButton>
-            </Box>
-          )}
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 }
