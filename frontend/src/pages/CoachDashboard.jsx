@@ -7,6 +7,7 @@ import {
   CardMedia,
   Grid,
   Skeleton,
+  Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
