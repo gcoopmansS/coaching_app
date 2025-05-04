@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   CardMedia,
+  Grid,
   Skeleton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -20,13 +20,29 @@ export default function CoachDashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token || !user?.id) return;
+    if (!token || !user?.id) {
+      console.error(
+        "No token or user ID found. Skipping coach dashboard fetch."
+      );
+      return;
+    }
 
     fetch(`${API_URL}/api/connections/coach/${user.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(async (res) => {
+        if (res.status === 401) {
+          console.warn("Unauthorized, clearing session...");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to fetch athletes");
+
+        const data = await res.json();
         setRequests(data.filter((r) => r.status === "accepted"));
       })
       .catch((err) => console.error("Failed to load athletes:", err))
@@ -39,27 +55,34 @@ export default function CoachDashboard() {
         My Athletes
       </Typography>
 
-      <Grid container spacing={2}>
-        {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
+      {loading ? (
+        <Grid container spacing={2}>
+          {Array.from({ length: 3 }).map((_, i) => (
             <Grid item xs={12} sm={6} md={4} key={i}>
               <Card>
                 <Skeleton variant="rectangular" height={160} />
                 <CardContent>
                   <Skeleton width="60%" />
                   <Skeleton width="40%" />
-                  <Skeleton width="80%" />
+                  <Skeleton width="50%" />
+                  <Skeleton width="30%" />
                 </CardContent>
               </Card>
             </Grid>
-          ))
-        ) : requests.length === 0 ? (
-          <Typography>No active coaching connections yet.</Typography>
-        ) : (
-          requests.map((r) => (
+          ))}
+        </Grid>
+      ) : requests.length === 0 ? (
+        <Typography>No active coaching connections yet.</Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {requests.map((r) => (
             <Grid item xs={12} sm={6} md={4} key={r._id}>
               <Card
-                sx={{ cursor: "pointer" }}
+                sx={{
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
                 onClick={() => navigate(`/coach/runner/${r.runnerId._id}`)}
               >
                 <CardMedia
@@ -80,9 +103,9 @@ export default function CoachDashboard() {
                 </CardContent>
               </Card>
             </Grid>
-          ))
-        )}
-      </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 }

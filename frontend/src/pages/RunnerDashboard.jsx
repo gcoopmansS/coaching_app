@@ -10,11 +10,11 @@ import {
   ToggleButton,
   Paper,
   Skeleton,
+  Grid,
 } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import WorkoutCalendar from "../components/WorkoutCalendar";
-import BlockPreview from "../components/WorkoutPreviewBlock";
 import MiniBlockBar from "../components/MiniBlockBar";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -85,40 +85,44 @@ export default function RunnerDashboard() {
         <Typography variant="h6" gutterBottom>
           Your Coaches
         </Typography>
-        <Stack direction="row" spacing={2}>
+        <Grid container spacing={2}>
           {loadingCoaches
             ? Array.from({ length: 2 }).map((_, i) => (
-                <Card key={i} sx={{ minWidth: 200 }}>
-                  <CardContent
-                    sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                  >
-                    <Skeleton variant="circular" width={48} height={48} />
-                    <Box>
-                      <Skeleton width={100} />
-                      <Skeleton width={60} />
-                    </Box>
-                  </CardContent>
-                </Card>
+                <Grid item xs={12} sm={6} md={4} key={i}>
+                  <Card>
+                    <CardContent
+                      sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                    >
+                      <Skeleton variant="circular" width={48} height={48} />
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Skeleton width="80%" />
+                        <Skeleton width="50%" />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
               ))
             : coaches.map((c) => (
-                <Card key={c._id} sx={{ minWidth: 200 }}>
-                  <CardContent
-                    sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                  >
-                    <Avatar
-                      src={`${API_URL}${c.coachId.profilePicture || ""}`}
-                      sx={{ width: 48, height: 48 }}
-                    />
-                    <Box>
-                      <Typography variant="subtitle1">
-                        {c.coachId.name}
-                      </Typography>
-                      <Typography variant="caption">{c.goal}</Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
+                <Grid item xs={12} sm={6} md={4} key={c._id}>
+                  <Card>
+                    <CardContent
+                      sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                    >
+                      <Avatar
+                        src={`${API_URL}${c.coachId.profilePicture || ""}`}
+                        sx={{ width: 48, height: 48 }}
+                      />
+                      <Box>
+                        <Typography variant="subtitle1">
+                          {c.coachId.name}
+                        </Typography>
+                        <Typography variant="caption">{c.goal}</Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
               ))}
-        </Stack>
+        </Grid>
       </Box>
 
       <Box sx={{ mb: 2, display: "flex", justifyContent: "space-between" }}>
