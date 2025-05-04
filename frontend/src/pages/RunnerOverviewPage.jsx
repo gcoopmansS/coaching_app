@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import {
   Box,
@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
+  Skeleton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import GradientButton from "../components/GradientButton";
@@ -20,41 +21,46 @@ import {
   getWorkoutTotalDistance,
   getWorkoutTotalTime,
 } from "../utils/workoutMetrics";
-import { authFetch } from "../utils/api"; // ✅ import helper
+import MiniBlockBar from "../components/MiniBlockBar";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function RunnerOverviewPage({ setUser }) {
+export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
-  const navigate = useNavigate();
   const [runner, setRunner] = useState(null);
   const [workouts, setWorkouts] = useState([]);
+  const [loadingRunner, setLoadingRunner] = useState(true);
+  const [loadingWorkouts, setLoadingWorkouts] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [openPreview, setOpenPreview] = useState(false);
   const [editWorkout, setEditWorkout] = useState(null);
 
   const fetchWorkouts = useCallback(() => {
-    authFetch(`${API_URL}/api/workouts/runner/${runnerId}`, {}, () => {
-      setUser(null);
-      navigate("/login");
+    const token = localStorage.getItem("token");
+    setLoadingWorkouts(true);
+    fetch(`${API_URL}/api/workouts/runner/${runnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then(setWorkouts)
-      .catch((err) => console.error("Error loading workouts:", err));
-  }, [runnerId, setUser, navigate]);
+      .catch((err) => console.error("Error loading workouts:", err))
+      .finally(() => setLoadingWorkouts(false));
+  }, [runnerId]);
 
   useEffect(() => {
-    authFetch(`${API_URL}/api/users/${runnerId}`, {}, () => {
-      setUser(null);
-      navigate("/login");
+    const token = localStorage.getItem("token");
+    setLoadingRunner(true);
+    fetch(`${API_URL}/api/users/${runnerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then(setRunner)
-      .catch((err) => console.error("Error loading runner:", err));
+      .catch((err) => console.error("Error loading runner:", err))
+      .finally(() => setLoadingRunner(false));
 
     fetchWorkouts();
-  }, [runnerId, fetchWorkouts, setUser, navigate]);
+  }, [runnerId, fetchWorkouts]);
 
   const calendarEvents = workouts.map((workout) => ({
     id: workout._id,
@@ -84,18 +90,14 @@ export default function RunnerOverviewPage({ setUser }) {
     const workoutId = info.event.id;
     const newDate = info.event.startStr;
 
-    authFetch(
-      `${API_URL}/api/workouts/${workoutId}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: newDate }),
+    fetch(`${API_URL}/api/workouts/${workoutId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      () => {
-        setUser(null);
-        navigate("/login");
-      }
-    )
+      body: JSON.stringify({ date: newDate }),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to update workout date");
         return res.json();
@@ -113,19 +115,35 @@ export default function RunnerOverviewPage({ setUser }) {
         Runner Overview
       </Typography>
 
-      {runner && (
-        <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center" }}>
-          <Avatar
-            src={`${API_URL}${runner.profilePicture || ""}`}
-            sx={{ width: 64, height: 64, mr: 2 }}
-          />
-          <Box>
-            <Typography variant="h6">{runner.name}</Typography>
-            <Typography>Email: {runner.email}</Typography>
-            <Typography>City: {runner.city || "—"}</Typography>
-          </Box>
-        </Paper>
-      )}
+      <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center" }}>
+        {loadingRunner ? (
+          <>
+            <Skeleton
+              variant="circular"
+              width={64}
+              height={64}
+              sx={{ mr: 2 }}
+            />
+            <Box>
+              <Skeleton width={120} />
+              <Skeleton width={180} />
+              <Skeleton width={100} />
+            </Box>
+          </>
+        ) : (
+          <>
+            <Avatar
+              src={`${API_URL}${runner?.profilePicture || ""}`}
+              sx={{ width: 64, height: 64, mr: 2 }}
+            />
+            <Box>
+              <Typography variant="h6">{runner?.name}</Typography>
+              <Typography>Email: {runner?.email}</Typography>
+              <Typography>City: {runner?.city || "—"}</Typography>
+            </Box>
+          </>
+        )}
+      </Paper>
 
       <Stack
         direction="row"
@@ -140,7 +158,16 @@ export default function RunnerOverviewPage({ setUser }) {
       </Stack>
 
       <Paper sx={{ p: 2, mb: 3 }}>
-        {workouts.length > 0 ? (
+        {loadingWorkouts ? (
+          <Stack spacing={2}>
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Box key={i}>
+                <Skeleton width="30%" />
+                <Skeleton height={40} sx={{ mt: 1 }} />
+              </Box>
+            ))}
+          </Stack>
+        ) : workouts.length > 0 ? (
           <WorkoutCalendar
             events={calendarEvents}
             onEventClick={handleEventClick}
