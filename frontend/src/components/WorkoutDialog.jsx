@@ -38,32 +38,25 @@ export default function WorkoutDialog({
   coachId,
   editable = false,
 }) {
-  const isEditMode = mode === "edit" || mode === "create";
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [blocks, setBlocks] = useState([]);
   const [savedWorkouts, setSavedWorkouts] = useState([]);
   const [selectedId, setSelectedId] = useState("");
-  const [editing, setEditing] = useState(isEditMode);
+  const [editing, setEditing] = useState(false);
 
+  // Set editing mode on dialog open
   useEffect(() => {
-    setEditing(mode === "edit" || mode === "create");
-  }, [mode]);
-
-  useEffect(() => {
-    if (isEditMode && coachId) {
-      const token = localStorage.getItem("token");
-      fetch(`${API_URL}/api/saved-workouts/${coachId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then(setSavedWorkouts)
-        .catch((err) => console.error("Failed to fetch saved workouts:", err));
+    if (open) {
+      setEditing(mode === "edit" || mode === "create");
     }
-  }, [isEditMode, coachId]);
+  }, [open, mode]);
 
   useEffect(() => {
+    if (!open) return;
+
     if (mode === "create") {
+      setSelectedId("");
       setTitle("");
       setDate("");
       setBlocks([
@@ -97,9 +90,23 @@ export default function WorkoutDialog({
       setDate(initialWorkout.date?.slice(0, 10) || "");
       setBlocks(initialWorkout.blocks || []);
     }
-  }, [initialWorkout, mode]);
+  }, [open, mode, initialWorkout]);
+
+  useEffect(() => {
+    if ((mode === "create" || mode === "edit") && coachId) {
+      const token = localStorage.getItem("token");
+      fetch(`${API_URL}/api/saved-workouts/${coachId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then(setSavedWorkouts)
+        .catch((err) => console.error("Failed to fetch saved workouts:", err));
+    }
+  }, [coachId, mode]);
 
   const handleSave = async () => {
+    if (!title || !date) return;
+
     const token = localStorage.getItem("token");
     const payload = {
       runnerId,
@@ -109,10 +116,12 @@ export default function WorkoutDialog({
       blocks,
     };
 
-    const url = initialWorkout._id
-      ? `${API_URL}/api/workouts/${initialWorkout._id}`
-      : `${API_URL}/api/workouts`;
-    const method = initialWorkout._id ? "PATCH" : "POST";
+    const url =
+      initialWorkout && initialWorkout._id
+        ? `${API_URL}/api/workouts/${initialWorkout._id}`
+        : `${API_URL}/api/workouts`;
+
+    const method = initialWorkout && initialWorkout._id ? "PATCH" : "POST";
 
     try {
       const res = await fetch(url, {
@@ -125,16 +134,17 @@ export default function WorkoutDialog({
       });
 
       if (res.ok) {
-        onClose(true);
+        onClose(true); // Trigger parent refresh
       } else {
-        console.error("Failed to save workout");
+        console.error("❌ Failed to save workout.");
       }
     } catch (err) {
-      console.error("Save error:", err);
+      console.error("🔥 Save error:", err);
     }
   };
 
   const handleDelete = async () => {
+    if (!initialWorkout?._id) return;
     const confirmed = window.confirm("Delete this workout?");
     if (!confirmed) return;
 
@@ -152,10 +162,9 @@ export default function WorkoutDialog({
     }
   };
 
-  const handleDragEnd = (result) => {
-    const { source, destination } = result;
+  const handleDragEnd = ({ source, destination }) => {
     if (!destination || source.index === destination.index) return;
-    const reordered = Array.from(blocks);
+    const reordered = [...blocks];
     const [moved] = reordered.splice(source.index, 1);
     reordered.splice(destination.index, 0, moved);
     setBlocks(reordered);
@@ -214,13 +223,7 @@ export default function WorkoutDialog({
 
   return (
     <Dialog open={open} onClose={() => onClose(false)} fullWidth maxWidth="md">
-      <DialogTitle
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <DialogTitle sx={{ display: "flex", justifyContent: "space-between" }}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           {mode === "create"
             ? "Schedule Workout"
@@ -270,6 +273,7 @@ export default function WorkoutDialog({
                 </Select>
               </FormControl>
             )}
+
             <TextField
               label="Title"
               fullWidth
@@ -374,7 +378,11 @@ export default function WorkoutDialog({
 
       {editing && (
         <DialogActions sx={{ p: 2 }}>
-          <GradientButton onClick={handleSave} variant="contained">
+          <GradientButton
+            onClick={handleSave}
+            variant="contained"
+            disabled={!title || !date}
+          >
             Save Workout
           </GradientButton>
         </DialogActions>

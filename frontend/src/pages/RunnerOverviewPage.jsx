@@ -24,6 +24,17 @@ import MiniBlockBar from "../components/MiniBlockBar";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+function getWeekStart(date = new Date()) {
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when Sunday
+  return new Date(date.setDate(diff));
+}
+
+function getWeekEnd(date = new Date()) {
+  const start = getWeekStart(date);
+  return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+}
+
 export default function RunnerOverviewPage() {
   const { runnerId } = useParams();
   const [runner, setRunner] = useState(null);
@@ -63,52 +74,26 @@ export default function RunnerOverviewPage() {
     fetchWorkouts();
   }, [runnerId, fetchWorkouts]);
 
-  const calendarEvents = workouts.map((workout) => ({
-    id: workout._id,
-    title: workout.title,
-    date: workout.date,
+  const calendarEvents = workouts.map((w) => ({
+    id: w._id,
+    title: w.title,
+    date: w.date,
     extendedProps: {
-      blocks: workout.blocks,
-      coachId: workout.coachId,
+      blocks: w.blocks,
+      coachId: w.coachId,
     },
   }));
 
-  const handleEventClick = (info) => {
-    const clickedWorkout = workouts.find((w) => w._id === info.event.id);
-    if (clickedWorkout) {
-      setSelectedWorkout(clickedWorkout);
-      setDialogMode("view");
-      setDialogOpen(true);
-    }
-  };
-
-  const handleEventDrop = (info) => {
-    const workoutId = info.event.id;
-    const newDate = info.event.startStr;
-
-    fetch(`${API_URL}/api/workouts/${workoutId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ date: newDate }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to update workout date");
-        return res.json();
-      })
-      .then(() => fetchWorkouts())
-      .catch((err) => {
-        console.error("Workout reschedule error:", err);
-        info.revert();
-      });
-  };
+  const startOfWeek = getWeekStart();
+  const endOfWeek = getWeekEnd();
+  const workoutsThisWeek = workouts.filter((w) => {
+    const date = new Date(w.date);
+    return date >= startOfWeek && date <= endOfWeek;
+  });
 
   const handleDelete = async (workoutId) => {
     const confirmed = window.confirm("Delete this workout?");
     if (!confirmed) return;
-
     try {
       const token = localStorage.getItem("token");
       await fetch(`${API_URL}/api/workouts/${workoutId}`, {
@@ -197,116 +182,137 @@ export default function RunnerOverviewPage() {
           ))}
         </Stack>
       ) : view === "list" ? (
-        <Box sx={{ pl: { xs: 0, sm: 10 } }}>
-          <Stack spacing={4} sx={{ position: "relative" }}>
-            {workouts
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
-              .map((w) => {
-                const workoutDate = new Date(w.date);
-                const isEditable = w.coachId === user?.id;
+        workoutsThisWeek.length === 0 ? (
+          <Typography>No workouts scheduled this week.</Typography>
+        ) : (
+          <Box sx={{ pl: { xs: 0, sm: 10 } }}>
+            <Stack spacing={4} sx={{ position: "relative" }}>
+              {workoutsThisWeek
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map((w) => {
+                  const workoutDate = new Date(w.date);
+                  const isEditable = w.coachId === user?.id;
 
-                return (
-                  <Box key={w._id} sx={{ position: "relative" }}>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        left: -80,
-                        top: 24,
-                        textAlign: "right",
-                        pr: 2,
-                        width: 70,
-                        display: { xs: "none", sm: "block" },
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                  return (
+                    <Box key={w._id} sx={{ position: "relative" }}>
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: -80,
+                          top: 24,
+                          textAlign: "right",
+                          pr: 2,
+                          width: 70,
+                          display: { xs: "none", sm: "block" },
+                        }}
                       >
-                        {workoutDate.toLocaleDateString(undefined, {
-                          weekday: "short",
-                        })}
-                      </Typography>
-                      <Typography variant="body2">
-                        {workoutDate.toLocaleDateString(undefined, {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </Typography>
-                    </Box>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                        >
+                          {workoutDate.toLocaleDateString(undefined, {
+                            weekday: "short",
+                          })}
+                        </Typography>
+                        <Typography variant="body2">
+                          {workoutDate.toLocaleDateString(undefined, {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </Typography>
+                      </Box>
 
-                    <Paper
-                      sx={{
-                        p: 2,
-                        pl: { xs: 2, sm: 5 },
-                        position: "relative",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        setSelectedWorkout(w);
-                        setDialogMode("view");
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="flex-start"
+                      <Paper
+                        sx={{
+                          p: 2,
+                          pl: { xs: 2, sm: 5 },
+                          position: "relative",
+                        }}
+                        onClick={() => {
+                          setSelectedWorkout(w);
+                          setDialogMode("view");
+                          setDialogOpen(true);
+                        }}
                       >
-                        <Box>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                        >
                           <Typography variant="h6">{w.title}</Typography>
-                          {!isEditable && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Planned by another coach
-                            </Typography>
+
+                          {isEditable && (
+                            <Stack direction="row" spacing={1}>
+                              <Tooltip title="Edit">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedWorkout(w);
+                                    setDialogMode("edit");
+                                    setDialogOpen(true);
+                                  }}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(w._id);
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
                           )}
-                        </Box>
-
-                        {isEditable && (
-                          <Stack direction="row" spacing={1}>
-                            <Tooltip title="Edit">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedWorkout(w);
-                                  setDialogMode("edit");
-                                  setDialogOpen(true);
-                                }}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(w._id);
-                                }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
-                        )}
-                      </Stack>
-
-                      <MiniBlockBar blocks={w.blocks} />
-                    </Paper>
-                  </Box>
-                );
-              })}
-          </Stack>
-        </Box>
+                        </Stack>
+                        <MiniBlockBar blocks={w.blocks} />
+                      </Paper>
+                    </Box>
+                  );
+                })}
+            </Stack>
+          </Box>
+        )
       ) : (
         <Paper sx={{ p: 2, mb: 3 }}>
           <WorkoutCalendar
             events={calendarEvents}
-            onEventClick={handleEventClick}
-            onEventDrop={handleEventDrop}
+            onEventClick={(info) => {
+              const clickedWorkout = workouts.find(
+                (w) => w._id === info.event.id
+              );
+              if (clickedWorkout) {
+                setSelectedWorkout(clickedWorkout);
+                setDialogMode("view");
+                setDialogOpen(true);
+              }
+            }}
+            onEventDrop={(info) => {
+              const workoutId = info.event.id;
+              const newDate = info.event.startStr;
+              fetch(`${API_URL}/api/workouts/${workoutId}`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ date: newDate }),
+              })
+                .then((res) => {
+                  if (!res.ok) throw new Error("Failed to update workout");
+                  return res.json();
+                })
+                .then(() => fetchWorkouts())
+                .catch((err) => {
+                  console.error("Error updating workout:", err);
+                  info.revert();
+                });
+            }}
             editable={true}
             highlightCoachId={user?.id}
           />
