@@ -16,6 +16,8 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 import GradientButton from "../components/GradientButton";
 import WorkoutDialog from "../components/WorkoutDialog";
@@ -24,14 +26,17 @@ import MiniBlockBar from "../components/MiniBlockBar";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function getWeekStart(date = new Date()) {
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when Sunday
-  return new Date(date.setDate(diff));
+function getWeekStart(offset = 0) {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1) + offset * 7;
+  const date = new Date(now.setDate(diff));
+  date.setHours(0, 0, 0, 0);
+  return date;
 }
 
-function getWeekEnd(date = new Date()) {
-  const start = getWeekStart(date);
+function getWeekEnd(offset = 0) {
+  const start = getWeekStart(offset);
   return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
 }
 
@@ -45,6 +50,7 @@ export default function RunnerOverviewPage() {
   const [dialogMode, setDialogMode] = useState("view");
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [view, setView] = useState("list");
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -84,12 +90,14 @@ export default function RunnerOverviewPage() {
     },
   }));
 
-  const startOfWeek = getWeekStart();
-  const endOfWeek = getWeekEnd();
+  const startOfWeek = getWeekStart(weekOffset);
+  const endOfWeek = getWeekEnd(weekOffset);
   const workoutsThisWeek = workouts.filter((w) => {
     const date = new Date(w.date);
     return date >= startOfWeek && date <= endOfWeek;
   });
+
+  const weekLabel = `${startOfWeek.toLocaleDateString()} — ${endOfWeek.toLocaleDateString()}`;
 
   const handleDelete = async (workoutId) => {
     const confirmed = window.confirm("Delete this workout?");
@@ -142,7 +150,29 @@ export default function RunnerOverviewPage() {
         alignItems="center"
         sx={{ mb: 2, flexWrap: "wrap", gap: 2 }}
       >
-        <Typography variant="h6">Planned Workouts</Typography>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Typography variant="h6">Planned Workouts</Typography>
+          {view === "list" && (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <IconButton
+                onClick={() => setWeekOffset((w) => w - 1)}
+                size="small"
+              >
+                <ArrowBackIosIcon fontSize="small" />
+              </IconButton>
+              <Typography variant="body2" sx={{ minWidth: 160 }}>
+                {weekLabel}
+              </Typography>
+              <IconButton
+                onClick={() => setWeekOffset((w) => w + 1)}
+                size="small"
+              >
+                <ArrowForwardIosIcon fontSize="small" />
+              </IconButton>
+            </Stack>
+          )}
+        </Stack>
+
         <Stack direction="row" spacing={2}>
           <ToggleButtonGroup
             value={view}
