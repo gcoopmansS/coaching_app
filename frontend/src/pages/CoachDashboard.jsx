@@ -53,7 +53,11 @@ export default function CoachDashboard() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        My Athletes
+        Welcome back, {user.name}
+      </Typography>
+
+      <Typography variant="h5" gutterBottom>
+        Your Athletes
       </Typography>
 
       {loading ? (

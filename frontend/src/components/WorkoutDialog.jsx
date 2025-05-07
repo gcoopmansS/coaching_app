@@ -38,17 +38,20 @@ export default function WorkoutDialog({
   coachId,
   editable = false,
 }) {
-  const [editMode, setEditMode] = useState(
-    mode === "edit" || mode === "create"
-  );
+  const isEditMode = mode === "edit" || mode === "create";
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [blocks, setBlocks] = useState([]);
   const [savedWorkouts, setSavedWorkouts] = useState([]);
   const [selectedId, setSelectedId] = useState("");
+  const [editing, setEditing] = useState(isEditMode);
 
   useEffect(() => {
-    if (editMode && coachId) {
+    setEditing(mode === "edit" || mode === "create");
+  }, [mode]);
+
+  useEffect(() => {
+    if (isEditMode && coachId) {
       const token = localStorage.getItem("token");
       fetch(`${API_URL}/api/saved-workouts/${coachId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -57,7 +60,7 @@ export default function WorkoutDialog({
         .then(setSavedWorkouts)
         .catch((err) => console.error("Failed to fetch saved workouts:", err));
     }
-  }, [editMode, coachId]);
+  }, [isEditMode, coachId]);
 
   useEffect(() => {
     if (mode === "create") {
@@ -219,18 +222,22 @@ export default function WorkoutDialog({
         }}
       >
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          {editMode ? "Edit Workout" : initialWorkout?.title || "Workout"}
+          {mode === "create"
+            ? "Schedule Workout"
+            : editing
+            ? "Edit Workout"
+            : initialWorkout?.title || "Workout"}
         </Typography>
 
         <Stack direction="row" spacing={1}>
-          {!editMode && editable && (
+          {!editing && editable && (
             <Tooltip title="Edit">
-              <IconButton onClick={() => setEditMode(true)} size="small">
+              <IconButton onClick={() => setEditing(true)} size="small">
                 <EditIcon />
               </IconButton>
             </Tooltip>
           )}
-          {editMode && initialWorkout?._id && (
+          {editing && initialWorkout?._id && (
             <Tooltip title="Delete">
               <IconButton onClick={handleDelete} size="small">
                 <DeleteIcon />
@@ -244,7 +251,7 @@ export default function WorkoutDialog({
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
-        {editMode ? (
+        {editing ? (
           <Stack spacing={2}>
             {mode === "create" && (
               <FormControl fullWidth size="small">
@@ -339,13 +346,15 @@ export default function WorkoutDialog({
           </Stack>
         ) : (
           <Box>
-            <Typography
-              variant="subtitle2"
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              {new Date(initialWorkout?.date).toLocaleDateString()}
-            </Typography>
+            {initialWorkout?.date && (
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                {new Date(initialWorkout.date).toLocaleDateString()}
+              </Typography>
+            )}
             <Typography
               variant="subtitle2"
               color="text.secondary"
@@ -363,7 +372,7 @@ export default function WorkoutDialog({
         )}
       </DialogContent>
 
-      {editMode && (
+      {editing && (
         <DialogActions sx={{ p: 2 }}>
           <GradientButton onClick={handleSave} variant="contained">
             Save Workout

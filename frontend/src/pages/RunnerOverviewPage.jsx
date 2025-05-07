@@ -239,6 +239,7 @@ export default function RunnerOverviewPage() {
                         p: 2,
                         pl: { xs: 2, sm: 5 },
                         position: "relative",
+                        cursor: "pointer",
                       }}
                       onClick={() => {
                         setSelectedWorkout(w);
@@ -251,7 +252,17 @@ export default function RunnerOverviewPage() {
                         justifyContent="space-between"
                         alignItems="flex-start"
                       >
-                        <Typography variant="h6">{w.title}</Typography>
+                        <Box>
+                          <Typography variant="h6">{w.title}</Typography>
+                          {!isEditable && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Planned by another coach
+                            </Typography>
+                          )}
+                        </Box>
 
                         {isEditable && (
                           <Stack direction="row" spacing={1}>
@@ -282,6 +293,7 @@ export default function RunnerOverviewPage() {
                           </Stack>
                         )}
                       </Stack>
+
                       <MiniBlockBar blocks={w.blocks} />
                     </Paper>
                   </Box>
