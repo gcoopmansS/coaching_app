@@ -37,7 +37,10 @@ function getWeekStart(offset = 0) {
 
 function getWeekEnd(offset = 0) {
   const start = getWeekStart(offset);
-  return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6); // move to Sunday
+  end.setHours(23, 59, 59, 999); // set to end of Sunday
+  return end;
 }
 
 export default function RunnerOverviewPage() {
