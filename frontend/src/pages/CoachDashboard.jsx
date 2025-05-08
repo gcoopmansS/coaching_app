@@ -64,14 +64,20 @@ export default function CoachDashboard() {
         <Grid container spacing={2}>
           {Array.from({ length: 3 }).map((_, i) => (
             <Grid item xs={12} sm={6} md={4} key={i}>
-              <Card sx={{ height: "100%" }}>
-                <Skeleton variant="rectangular" height={160} />
-                <CardContent>
+              <Card
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  height: 250, // match expected final card height
+                }}
+              >
+                <Skeleton variant="rectangular" height={140} />
+                <CardContent sx={{ flexGrow: 1 }}>
                   <Stack spacing={1}>
+                    <Skeleton variant="text" width="70%" height={24} />
+                    <Skeleton variant="text" width="50%" />
                     <Skeleton variant="text" width="60%" />
                     <Skeleton variant="text" width="40%" />
-                    <Skeleton variant="text" width="50%" />
-                    <Skeleton variant="text" width="30%" />
                   </Stack>
                 </CardContent>
               </Card>
