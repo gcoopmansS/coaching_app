@@ -290,6 +290,10 @@ export default function WorkoutDialog({
               onChange={(e) => setDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
             />
+            <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
+              Estimated: {getWorkoutTotalDistance(blocks).toFixed(2)} km •{" "}
+              {Math.round(getWorkoutTotalTime(blocks))} min
+            </Typography>
 
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="blocks">
