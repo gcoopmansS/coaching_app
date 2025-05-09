@@ -52,6 +52,7 @@ export default function BlockEditor({
       type: "run",
       durationType: "distance",
       duration: "1",
+      distanceUnit: "km",
       intensityType: "pace",
       intensity: "6:00",
       description: "",
@@ -238,17 +239,47 @@ export default function BlockEditor({
             ))}
           </TextField>
 
-          <TextField
-            label={
-              block.durationType === "distance"
-                ? "Distance (km)"
-                : "Time (minutes)"
-            }
-            value={block.duration || ""}
-            onChange={(e) => update("duration", e.target.value)}
-            fullWidth
-            sx={{ mt: 2 }}
-          />
+          {block.durationType === "distance" ? (
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="flex-end"
+              sx={{ mt: 2 }}
+            >
+              <TextField
+                label="Distance"
+                type="number"
+                value={block.duration || ""}
+                onChange={(e) => update("duration", e.target.value)}
+                fullWidth
+                variant="outlined"
+                size="medium" // Match standard fields
+              />
+              <TextField
+                select
+                label="Unit"
+                value={block.distanceUnit || "km"}
+                onChange={(e) => update("distanceUnit", e.target.value)}
+                variant="outlined"
+                size="medium" // Match standard fields
+                sx={{
+                  width: 120,
+                }}
+              >
+                <MenuItem value="km">km</MenuItem>
+                <MenuItem value="m">m</MenuItem>
+              </TextField>
+            </Stack>
+          ) : (
+            <TextField
+              label="Time (minutes)"
+              type="number"
+              value={block.duration || ""}
+              onChange={(e) => update("duration", e.target.value)}
+              fullWidth
+              sx={{ mt: 2 }}
+            />
+          )}
 
           <TextField
             select
@@ -301,7 +332,9 @@ export default function BlockEditor({
               </Typography>
               <Typography>
                 {block.duration || "-"}{" "}
-                {block.durationType === "distance" ? "km" : "min"}
+                {block.durationType === "distance"
+                  ? block.distanceUnit || "km"
+                  : "min"}
               </Typography>
             </Box>
             <Box>

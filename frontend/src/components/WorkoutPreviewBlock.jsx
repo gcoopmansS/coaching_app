@@ -2,7 +2,7 @@ import { Box, Stack, Typography, Paper } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
-import theme from "../theme/theme"; // ✅ import your theme
+import theme from "../theme/theme";
 
 function BlockPreview({ block, nested = false }) {
   const type = (block.type || "").toLowerCase();
@@ -10,6 +10,7 @@ function BlockPreview({ block, nested = false }) {
 
   const renderDetails = () => {
     const isDistance = block.durationType === "distance";
+    const unit = isDistance ? block.distanceUnit || "km" : "min";
 
     return (
       <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 1 }}>
@@ -21,7 +22,7 @@ function BlockPreview({ block, nested = false }) {
               <AccessTimeIcon fontSize="small" />
             )}
             <Typography variant="body2">
-              {block.duration} {isDistance ? "km" : "min"}
+              {block.duration} {unit}
             </Typography>
           </Stack>
         )}

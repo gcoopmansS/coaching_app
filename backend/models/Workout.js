@@ -5,6 +5,7 @@ const blockSchema = new mongoose.Schema({
   description: String,
   durationType: String,
   duration: String,
+  distanceUnit: { type: String, enum: ["km", "m"], default: "km" },
   intensityType: String,
   intensity: String,
   blocks: [this], // allows nested loops

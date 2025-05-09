@@ -34,31 +34,35 @@ export function getBlockTime(block) {
   }
 
   if (block.durationType === "distance") {
-    const distance = parseFloat(block.duration);
-    if (!distance || isNaN(distance)) return 0;
+    const raw = parseFloat(block.duration);
+    if (!raw || isNaN(raw)) return 0;
 
-    // Estimate based on pace
+    const unit = block.distanceUnit || "km";
+    const distanceInKm = unit === "m" ? raw / 1000 : raw;
+
     if (block.intensityType === "pace" && block.intensity) {
       const pace = paceStringToDecimal(block.intensity);
-      if (pace) return distance * pace;
+      if (pace) return distanceInKm * pace;
     }
 
-    return distance * 6; // assume 6:00 min/km
+    return distanceInKm * 6; // default pace
   }
 
   return 0;
 }
 
 // Totals for a whole workout
-export function getWorkoutTotalDistance(blocks = []) {
+export const getWorkoutTotalDistance = (blocks) => {
   return blocks.reduce((sum, block) => {
-    if (block.type === "repeat" && Array.isArray(block.blocks)) {
-      const innerSum = getWorkoutTotalDistance(block.blocks);
-      return sum + innerSum * (block.repeat || 1);
+    if (block.durationType === "distance") {
+      const raw = parseFloat(block.duration || 0);
+      const unit = block.distanceUnit || "km";
+      const distanceInKm = unit === "m" ? raw / 1000 : raw;
+      return sum + distanceInKm;
     }
-    return sum + getBlockDistance(block);
+    return sum;
   }, 0);
-}
+};
 
 export function getWorkoutTotalTime(blocks = []) {
   return blocks.reduce((sum, block) => {
