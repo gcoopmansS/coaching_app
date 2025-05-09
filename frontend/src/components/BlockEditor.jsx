@@ -14,6 +14,7 @@ import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import GradientButton from "./GradientButton";
 import theme from "../theme/theme";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import InputMask from "react-input-mask";
 
 const durationTypes = ["time", "distance"];
 const intensityTypes = ["none", "pace", "heartRate", "speed"];
@@ -54,7 +55,7 @@ export default function BlockEditor({
       duration: "1",
       distanceUnit: "km",
       intensityType: "pace",
-      intensity: "6:00",
+      intensity: "06:00",
       description: "",
       editing: false,
     };
@@ -75,7 +76,6 @@ export default function BlockEditor({
         fontSize: "0.9rem",
       }}
     >
-      {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Stack direction="row" alignItems="center" spacing={1}>
           {dragHandleProps && (
@@ -113,7 +113,6 @@ export default function BlockEditor({
         )}
       </Stack>
 
-      {/* Repeat Block (shared DnD layout for edit and view mode) */}
       {block.type === "repeat" ? (
         <>
           {editing && (
@@ -253,7 +252,7 @@ export default function BlockEditor({
                 onChange={(e) => update("duration", e.target.value)}
                 fullWidth
                 variant="outlined"
-                size="medium" // Match standard fields
+                size="medium"
               />
               <TextField
                 select
@@ -261,10 +260,8 @@ export default function BlockEditor({
                 value={block.distanceUnit || "km"}
                 onChange={(e) => update("distanceUnit", e.target.value)}
                 variant="outlined"
-                size="medium" // Match standard fields
-                sx={{
-                  width: 120,
-                }}
+                size="medium"
+                sx={{ width: 120 }}
               >
                 <MenuItem value="km">km</MenuItem>
                 <MenuItem value="m">m</MenuItem>
@@ -297,13 +294,33 @@ export default function BlockEditor({
           </TextField>
 
           {block.intensityType !== "none" && (
-            <TextField
-              label="Intensity"
-              value={block.intensity || ""}
-              onChange={(e) => update("intensity", e.target.value)}
-              fullWidth
-              sx={{ mt: 2 }}
-            />
+            <>
+              {block.intensityType === "pace" ? (
+                <InputMask
+                  mask="9:99"
+                  value={block.intensity || ""}
+                  onChange={(e) => update("intensity", e.target.value)}
+                >
+                  {(inputProps) => (
+                    <TextField
+                      {...inputProps}
+                      label="Pace (mm:ss)"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      helperText="Enter in mm:ss format"
+                    />
+                  )}
+                </InputMask>
+              ) : (
+                <TextField
+                  label="Intensity"
+                  value={block.intensity || ""}
+                  onChange={(e) => update("intensity", e.target.value)}
+                  fullWidth
+                  sx={{ mt: 2 }}
+                />
+              )}
+            </>
           )}
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
@@ -318,7 +335,6 @@ export default function BlockEditor({
           </Box>
         </>
       ) : (
-        // View mode for non-repeat block
         <Box sx={{ mt: 2 }}>
           {block.description && (
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
