@@ -18,26 +18,39 @@ import SavedWorkoutsPage from "./pages/SavedWorkoutsPage";
 import CoachRequestsPage from "./pages/CoachRequests";
 import RunnerOverviewPage from "./pages/RunnerOverviewPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import StravaLandingPage from "./pages/StravaLandingPage";
 
 function AppRoutes({ user, setUser }) {
   const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const stravaConnected = params.get("strava") === "connected";
   const hideNavbar = ["/login", "/signup"].includes(location.pathname);
 
   return (
     <>
-      {/* ✅ Hide navbar for login/signup */}
       {!hideNavbar && user && <Navbar user={user} setUser={setUser} />}
 
       <Routes>
         <Route
           path="/"
-          element={<Navigate to={user ? `/${user.role}` : "/login"} />}
+          element={
+            new URLSearchParams(location.search).get("strava") ===
+            "connected" ? (
+              <Navigate to="/profile?strava=connected" replace />
+            ) : user ? (
+              <Navigate to={`/${user.role}`} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
 
         <Route
           path="/login"
           element={
-            user ? (
+            stravaConnected ? (
+              <Navigate to="/profile?strava=connected" />
+            ) : user ? (
               <Navigate to={`/${user.role}`} />
             ) : (
               <LoginPage setUser={setUser} />
@@ -50,7 +63,6 @@ function AppRoutes({ user, setUser }) {
           element={user ? <Navigate to={`/${user.role}`} /> : <SignupPage />}
         />
 
-        {/* ✅ Protected routes */}
         <Route
           path="/profile"
           element={
@@ -113,6 +125,7 @@ function AppRoutes({ user, setUser }) {
             </ProtectedRoute>
           }
         />
+        <Route path="/strava-landing" element={<StravaLandingPage />} />
       </Routes>
     </>
   );

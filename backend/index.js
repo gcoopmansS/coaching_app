@@ -14,6 +14,7 @@ const workoutRoutes = require("./routes/workoutRoutes");
 const savedWorkoutRoutes = require("./routes/savedWorkoutRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const userRoutes = require("./routes/userRoutes"); // ⬅️ New!
+const stravaRoutes = require("./routes/stravaRoutes");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api", workoutRoutes);
 app.use("/api", savedWorkoutRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api", userRoutes);
+app.use("/api/strava", stravaRoutes);
 
 // MongoDB Connection
 mongoose
