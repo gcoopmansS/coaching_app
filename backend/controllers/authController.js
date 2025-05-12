@@ -66,6 +66,7 @@ exports.login = async (req, res) => {
         city: user.city,
         dateOfBirth: user.dateOfBirth,
         bio: user.bio,
+        strava: user.strava,
       },
       token,
     });

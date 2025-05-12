@@ -16,13 +16,13 @@ export default function LoginPage({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ loading state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // ✅ Start loading
+    setLoading(true);
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -32,12 +32,26 @@ export default function LoginPage({ setUser }) {
       });
 
       const data = await res.json();
+      console.log("🔁 Login response data:", data);
+      console.log("🔁 Login response data:", data);
+      const params = new URLSearchParams(window.location.search);
+      const stravaRedirect = params.get("strava") === "connected";
 
       if (res.ok) {
+        const fixedUser = {
+          ...data.user,
+          id: data.user._id || data.user.id,
+        };
+
         localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        setUser(data.user);
-        navigate(data.user.role === "runner" ? "/runner" : "/coach");
+        localStorage.setItem("user", JSON.stringify(fixedUser));
+        setUser(fixedUser);
+
+        if (stravaRedirect) {
+          navigate("/profile?strava=connected");
+        } else {
+          navigate(fixedUser.role === "runner" ? "/runner" : "/coach");
+        }
       } else {
         setError(data.message || "Login failed.");
       }
@@ -45,7 +59,7 @@ export default function LoginPage({ setUser }) {
       console.error("Login error:", err);
       setError("Something went wrong. Please try again later.");
     } finally {
-      setLoading(false); // ✅ End loading
+      setLoading(false);
     }
   };
 
@@ -99,7 +113,7 @@ export default function LoginPage({ setUser }) {
               fullWidth
               type="submit"
               sx={{ mt: 2 }}
-              disabled={loading} // ✅ prevent multiple submits
+              disabled={loading}
             >
               {loading ? (
                 <CircularProgress size={20} color="inherit" />

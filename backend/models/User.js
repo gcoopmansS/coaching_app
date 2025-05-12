@@ -27,6 +27,20 @@ const userSchema = new mongoose.Schema({
   dateOfBirth: Date,
   bio: String,
   notifications: [notificationSchema], // ✅ this must exist
+
+  strava: {
+    accessToken: String,
+    refreshToken: String,
+    expiresAt: Number, // Unix timestamp
+    athleteId: Number,
+    username: String,
+    firstname: String,
+    lastname: String,
+    city: String,
+    country: String,
+    profile: String, // large avatar URL
+    profileMedium: String, // medium avatar URL
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

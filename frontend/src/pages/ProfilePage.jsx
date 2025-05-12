@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -8,11 +8,13 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { useLocation } from "react-router-dom";
 import GradientButton from "../components/GradientButton";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ProfilePage({ setUser }) {
+  const location = useLocation();
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const [user, setLocalUser] = useState(storedUser);
 
@@ -28,6 +30,46 @@ export default function ProfilePage({ setUser }) {
     message: "",
     severity: "success",
   });
+
+  const refreshUser = useCallback(async () => {
+    const id = user?.id || user?._id;
+    if (!id) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const updated = await res.json();
+
+      if (res.ok) {
+        const fixedUser = { ...updated, id: updated._id };
+        localStorage.setItem("user", JSON.stringify(fixedUser));
+        setLocalUser(fixedUser);
+        setUser(fixedUser);
+      }
+    } catch (err) {
+      console.error("❌ Failed to refresh user after Strava connect:", err);
+    }
+  }, [user, setUser]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("strava") === "connected") {
+      refreshUser();
+
+      setSnackbar({
+        open: true,
+        message: "✅ Strava connected successfully!",
+        severity: "success",
+      });
+
+      // Clean up the URL
+      const cleanedUrl = location.pathname;
+      window.history.replaceState({}, "", cleanedUrl);
+    }
+  }, [location, refreshUser]);
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -75,7 +117,7 @@ export default function ProfilePage({ setUser }) {
         };
 
         setLocalUser(updatedUser);
-        setUser(updatedUser); // ✅ update global user for Navbar
+        setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
 
         setSnackbar({
@@ -99,6 +141,8 @@ export default function ProfilePage({ setUser }) {
       });
     }
   };
+
+  if (!user) return null;
 
   return (
     <>
@@ -167,6 +211,75 @@ export default function ProfilePage({ setUser }) {
           />
 
           <GradientButton onClick={handleSave}>Save Profile</GradientButton>
+
+          {user?.role === "runner" && (
+            <>
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  Strava Integration
+                </Typography>
+
+                {user?.strava?.athleteId ? (
+                  <Box
+                    sx={{
+                      p: 2,
+                      border: "1px solid #4caf50",
+                      borderRadius: 2,
+                      bgcolor: "#e8f5e9",
+                      textAlign: "center",
+                    }}
+                  >
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      ✅ Connected to Strava
+                    </Typography>
+
+                    <Avatar
+                      src={user.strava.profile}
+                      alt="Strava profile"
+                      sx={{ width: 72, height: 72, mx: "auto", my: 1 }}
+                    />
+                    <Typography>
+                      {user.strava.firstname} {user.strava.lastname}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {user.strava.city}, {user.strava.country}
+                    </Typography>
+
+                    <GradientButton
+                      onClick={() =>
+                        alert("🚧 Disconnect functionality coming soon.")
+                      }
+                      color="error"
+                      sx={{ mt: 2 }}
+                    >
+                      Disconnect
+                    </GradientButton>
+                  </Box>
+                ) : (
+                  <Box sx={{ textAlign: "center", mt: 2 }}>
+                    <img
+                      src="/assets/strava/connect_with_strava.svg"
+                      alt="Connect with Strava"
+                      style={{ cursor: "pointer", height: 44 }}
+                      onClick={() =>
+                        (window.location.href = `${API_URL}/api/strava/connect?userId=${
+                          user.id || user._id
+                        }`)
+                      }
+                    />
+                  </Box>
+                )}
+
+                <Box sx={{ mt: 2, textAlign: "center" }}>
+                  <img
+                    src="/assets/strava/powered_by_strava.svg"
+                    alt="Powered by Strava"
+                    style={{ height: 28 }}
+                  />
+                </Box>
+              </Box>
+            </>
+          )}
         </Stack>
       </Box>
 
