@@ -43,7 +43,9 @@ exports.stravaCallback = async (req, res) => {
       { new: true }
     );
 
-    res.redirect(`${process.env.FRONTEND_URL}/strava-landing?strava=connected`);
+    res.redirect(
+      `${process.env.FRONTEND_URL}/strava-landing?strava=connected&userId=${userId}`
+    );
   } catch (err) {
     console.error("Strava callback failed:", err.response?.data || err.message);
     res.status(500).json({ message: "Strava authentication failed" });
