@@ -12,6 +12,7 @@ exports.connectStrava = (req, res) => {
 
 exports.stravaCallback = async (req, res) => {
   const { code, userId } = req.query;
+  console.log("📥 Strava callback query:", { code, userId });
 
   try {
     const response = await axios.post("https://www.strava.com/oauth/token", {
@@ -20,6 +21,8 @@ exports.stravaCallback = async (req, res) => {
       code,
       grant_type: "authorization_code",
     });
+
+    console.log("🎯 Strava token response:", response.data);
 
     const { access_token, refresh_token, expires_at, athlete } = response.data;
 
@@ -42,6 +45,8 @@ exports.stravaCallback = async (req, res) => {
       },
       { new: true }
     );
+
+    console.log("✅ Updated user with Strava data:", updatedUser);
 
     res.redirect(
       `${process.env.FRONTEND_URL}/strava-landing?strava=connected&userId=${userId}`
